@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %> | PlaceholderParts Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <span>PlaceholderParts Admin</span>
+    <nav>
+      <a href="/secure-admin">Dashboard</a>
+      <a href="/secure-admin/sidebar">Sidebar</a>
+      <a href="/secure-admin/email">Bulk Email</a>
+      <a href="/secure-admin/logs">Logs</a>
+      <% if (process.env.NODE_ENV === 'development') { %><a href="/secure-admin/test">Test Tools</a><% } %>
+      <a href="/secure-admin/logout">Logout</a>
+    </nav>
+  </header>
+  <main class="admin-main">
+    <% if (typeof flashSuccess !== 'undefined' && flashSuccess) { %><div class="alert alert-success"><%= flashSuccess %></div><% } %>
+    <% if (typeof flashError !== 'undefined' && flashError) { %><div class="alert alert-error"><%= flashError %></div><% } %>
+    <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+      <div class="alert alert-error alert-validation" role="alert" data-error-fields='<%= JSON.stringify(errors.map(e => e.path).filter(Boolean)) %>'>
+        <p class="alert-validation-intro">Please review the highlighted fields and complete them before submitting again.</p>
+        <ul><% errors.forEach(e => { %><li><%= e.msg %></li><% }) %></ul>
+      </div>
+    <% } %>

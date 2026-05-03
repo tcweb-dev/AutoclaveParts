@@ -1,0 +1,27 @@
+<aside class="sidebar" aria-label="Search categories">
+  <h2 class="sidebar-heading">Search</h2>
+  <ul class="sidebar-list">
+    <% if (typeof sidebarItems !== 'undefined' && sidebarItems.length > 0) { %>
+      <% sidebarItems.forEach(item => { %>
+        <li>
+          <% if (item.hrefUrl) { %>
+            <a href="<%= item.hrefUrl %>"><%= item.label %></a>
+          <% } else { %>
+            <span><%= item.label %></span>
+          <% } %>
+        </li>
+      <% }) %>
+    <% } else { %>
+      <li><span>Autoclaves</span></li>
+      <li><span>Bulk Disposable's</span></li>
+      <li><span>Endoscopy</span></li>
+      <li><span>Exam Chairs, Tables</span></li>
+      <li><span>Head Lamps</span></li>
+      <li><span>O.R. Lights</span></li>
+      <li><span>O.R. Tables</span></li>
+      <li><span>Property for Sale</span></li>
+      <li><span>Sterilizer's, Table Top</span></li>
+      <li><span>Vacuum Pumps</span></li>
+    <% } %>
+  </ul>
+</aside>

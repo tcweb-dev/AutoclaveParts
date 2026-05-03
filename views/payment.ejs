@@ -1,0 +1,52 @@
+<%- include('partials/head-open', { slides: [] }) %>
+
+<main class="page-main">
+  <div class="container form-container">
+    <h1>Complete Your Payment</h1>
+    <%- include('partials/flash') %>
+
+    <div class="payment-summary">
+      <h2><%= ad.companyName %></h2>
+      <p>Ad type: <strong><%= type === 'carousel' ? 'Carousel' : 'Grid' %> Ad</strong></p>
+      <p>Amount: <strong>$<%= amount.toFixed(2) %>/month</strong></p>
+      <p>Expires: <strong>same day next month</strong></p>
+      <p class="payment-note">Your ad will go live after payment is confirmed and admin approves it.</p>
+    </div>
+
+    <% if (isTestKey) { %>
+      <div class="alert alert-info">
+        <strong>Development mode:</strong> No live payment processor is configured. Click the button below to simulate a successful payment.
+      </div>
+      <form method="POST" action="/payment/stub-pay/<%= type %>/<%= ad._id %>">
+        <button type="submit" class="btn btn-primary btn-full">Simulate Payment (Dev Only)</button>
+      </form>
+    <% } else { %>
+      <form id="paymentForm">
+        <div id="paymentElement"></div>
+        <button type="submit" class="btn btn-primary btn-full" id="submitBtn">Pay $<%= amount.toFixed(2) %></button>
+        <div id="paymentMessage" class="alert" style="display:none;"></div>
+      </form>
+      <script src="https://js.stripe.com/v3/"></script>
+      <script type="module">
+        const stripe = Stripe('<%= stripePublishableKey %>');
+        const elements = stripe.elements({ clientSecret: '<%= clientSecret %>' });
+        const paymentElement = elements.create('payment');
+        paymentElement.mount('#paymentElement');
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          document.getElementById('submitBtn').disabled = true;
+          const { error } = await stripe.confirmPayment({ elements, confirmParams: { return_url: window.location.origin + '/dashboard' } });
+          if (error) {
+            const msg = document.getElementById('paymentMessage');
+            msg.textContent = error.message;
+            msg.style.display = 'block';
+            msg.className = 'alert alert-error';
+            document.getElementById('submitBtn').disabled = false;
+          }
+        });
+      </script>
+    <% } %>
+  </div>
+</main>
+
+<%- include('partials/foot-close') %>

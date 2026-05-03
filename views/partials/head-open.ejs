@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %> | PlaceholderParts.com</title>
+  <% if (typeof metaDescription !== 'undefined') { %>
+  <meta name="description" content="<%= metaDescription %>" />
+  <% } %>
+  <meta name="keywords" content="autoclaves, sterilizers, medical equipment, medical supplies, medical parts, hospital supplies, surgery center, surgery center supplies, autoclave parts, sterilizer parts" />
+  <meta property="og:title" content="<%= title %> | PlaceholderParts.com" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://placeholderparts.com" />
+  <link rel="canonical" href="https://placeholderparts.com" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css?v=20260501" />
+</head>
+<body>
+  <%- include('header') %>
+  <%- include('carousel', { slides: typeof slides !== 'undefined' ? slides : [] }) %>

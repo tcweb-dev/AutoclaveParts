@@ -1,0 +1,40 @@
+<%- include('partials/head-open', { slides: [] }) %>
+
+<main class="page-main">
+  <div class="container profile-container">
+    <h1>My Profile</h1>
+    <%- include('partials/flash') %>
+
+    <section class="profile-card" aria-label="Customer profile details">
+      <div class="profile-grid">
+        <div>
+          <h2>Account</h2>
+          <p><strong>Name:</strong> <%= customer.firstName %> <%= customer.lastName %></p>
+          <p><strong>Email:</strong> <%= customer.email %></p>
+          <p><strong>Phone:</strong> <%= customer.phone || 'Not provided' %></p>
+          <p><strong>Status:</strong> <%= customer.isActive ? 'Active' : 'Inactive' %></p>
+        </div>
+        <div>
+          <h2>Company</h2>
+          <p><strong>Company:</strong> <%= customer.companyName || 'Not provided' %></p>
+          <p><strong>Website:</strong>
+            <% if (customer.companyWebsite) { %>
+              <a href="<%= customer.companyWebsite.startsWith('http') ? customer.companyWebsite : 'https://' + customer.companyWebsite %>" target="_blank" rel="noopener noreferrer"><%= customer.companyWebsite %></a>
+            <% } else { %>
+              Not provided
+            <% } %>
+          </p>
+          <p><strong>Joined:</strong> <%= new Date(customer.createdAt).toLocaleDateString() %></p>
+          <p><strong>Last Login:</strong> <%= customer.lastLogin ? new Date(customer.lastLogin).toLocaleString() : 'First login' %></p>
+        </div>
+      </div>
+    </section>
+
+    <div class="profile-actions">
+      <a href="/dashboard" class="btn btn-primary">Go To My Ads</a>
+      <a href="/advertise" class="btn btn-secondary">Create New Ad</a>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/foot-close') %>

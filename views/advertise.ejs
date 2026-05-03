@@ -1,0 +1,35 @@
+<%- include('partials/head-open', { slides: [] }) %>
+
+<main class="page-main">
+  <div class="container">
+    <h1>Advertise on PlaceholderParts.com</h1>
+    <p>Reach buyers searching for autoclaves, sterilizers, medical equipment, and hospital supplies.</p>
+    <%- include('partials/flash') %>
+    <div class="ad-choice-grid">
+      <div class="ad-choice-card">
+        <h2>Carousel Ad</h2>
+        <p class="ad-price">$100 <span>/month</span></p>
+        <ul>
+          <li>Rotating banner at the top of every page</li>
+          <li>Clickable link to your website</li>
+          <li>Optional animation effect</li>
+          <li>Auto-renew or 30-day option</li>
+        </ul>
+        <a href="/advertise/carousel" class="btn btn-primary">Buy Carousel Ad</a>
+      </div>
+      <div class="ad-choice-card">
+        <h2>Grid Ad</h2>
+        <p class="ad-price">$50 <span>/month</span></p>
+        <ul>
+          <li>Prominent grid placement on home page</li>
+          <li>Clickable link to your website</li>
+          <li>Optional animation effect</li>
+          <li>Auto-renew or 30-day option</li>
+        </ul>
+        <a href="/advertise/grid" class="btn btn-secondary">Buy Grid Ad</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/foot-close') %>

@@ -1,0 +1,26 @@
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="header-brand">
+      <span class="header-brand-name">Placeholder Parts</span>
+      <span class="header-brand-tagline">Search For Parts, Supplies and More!</span>
+    </a>
+    <nav class="header-nav" aria-label="Primary navigation">
+      <a href="/advertise">Advertise</a>
+      <% if (user) { %>
+        <div class="account-menu">
+          <button class="account-trigger" type="button" aria-haspopup="true">
+            Account: <%= user.firstName %>
+          </button>
+          <div class="account-dropdown" role="menu" aria-label="Account options">
+            <a href="/profile" role="menuitem">Profile</a>
+            <a href="/dashboard" role="menuitem">My Ads</a>
+            <a href="/logout" role="menuitem">Logout</a>
+          </div>
+        </div>
+      <% } else { %>
+        <a href="/login">Login</a>
+        <a href="/register">Create Account</a>
+      <% } %>
+    </nav>
+  </div>
+</header>

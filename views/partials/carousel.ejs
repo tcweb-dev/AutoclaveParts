@@ -1,0 +1,77 @@
+<section class="carousel-wrapper" aria-label="Featured advertisers">
+  <% if (slides && slides.length > 0) { %>
+    <div class="carousel" id="mainCarousel" data-interval="5000">
+      <div class="carousel-track">
+        <% slides.forEach((slide, i) => { %>
+          <div class="carousel-slide<%= i === 0 ? ' active' : '' %>" aria-hidden="<%= i !== 0 %>"<%= slide.slideBgColor ? (' style="background-color: ' + slide.slideBgColor + ';"') : '' %>>
+            <% if (slide.linkUrl) { %>
+              <a href="<%= slide.linkUrl %>" target="_blank" rel="noopener noreferrer" class="slide-link">
+            <% } %>
+            <img
+              src="<%= slide.picturePath %>"
+              alt="<%= slide.companyName %> advertisement"
+              class="slide-img<%= slide.animationEnabled ? ' slide-animate' : '' %>"
+              style="object-position: <%= (
+                (typeof slide.imagePositionX === 'number' && typeof slide.imagePositionY === 'number')
+                  ? (slide.imagePositionX + '% ' + slide.imagePositionY + '%')
+                  : (
+                    slide.imagePosition === 'top' ? 'center top' :
+                    slide.imagePosition === 'bottom' ? 'center bottom' :
+                    slide.imagePosition === 'left' ? 'left center' :
+                    slide.imagePosition === 'right' ? 'right center' :
+                    slide.imagePosition === 'top-left' ? 'left top' :
+                    slide.imagePosition === 'top-right' ? 'right top' :
+                    slide.imagePosition === 'bottom-left' ? 'left bottom' :
+                    slide.imagePosition === 'bottom-right' ? 'right bottom' :
+                    'center center'
+                  )
+              ) %>; --img-scale: <%= (((slide.imageScale || 100) / 100).toFixed(2)) %>; --img-fit: <%= slide.imageFitMode === 'cover' ? 'cover' : 'contain' %>;"
+              loading="lazy"
+            />
+            <% if (slide.picture2Path) { %>
+              <img
+                src="<%= slide.picture2Path %>"
+                alt="<%= slide.companyName %> secondary advertisement image"
+                class="slide-img-secondary"
+                style="--img2-x: <%= (typeof slide.picture2PositionX === 'number' ? slide.picture2PositionX : 72) %>%; --img2-y: <%= (typeof slide.picture2PositionY === 'number' ? slide.picture2PositionY : 72) %>%; --img2-scale: <%= (((slide.picture2Scale || 100) / 100).toFixed(2)) %>;"
+                loading="lazy"
+              />
+            <% } %>
+            <% if (slide.linkUrl) { %></a><% } %>
+            <div
+              class="slide-caption<%= (typeof slide.captionPositionX === 'number' && typeof slide.captionPositionY === 'number') ? ' slide-caption-free' : (' caption-' + (slide.captionPosition || 'bottom-left')) %>"
+              <%- (typeof slide.captionPositionX === 'number' && typeof slide.captionPositionY === 'number')
+                ? ('style="left: ' + slide.captionPositionX + '%; top: ' + slide.captionPositionY + '%; color: ' + (slide.captionFontColor || '#ffffff') + '; font-size: ' + (slide.captionFontSize || 16) + 'px; font-weight: ' + (slide.captionFontWeight || '600') + ';"')
+                : ('style="color: ' + (slide.captionFontColor || '#ffffff') + '; font-size: ' + (slide.captionFontSize || 16) + 'px; font-weight: ' + (slide.captionFontWeight || '600') + ';"') %>
+            >
+              <span class="slide-company"><%= slide.companyName %></span>
+              <% if (slide.status === 'pending') { %><span class="slide-phone">Pending approval (visible only to you)</span><% } %>
+              <% if (slide.companyPhone) { %><span class="slide-phone"><%= slide.companyPhone %></span><% } %>
+            </div>
+            <% if (slide.companyDescription) { %>
+              <div
+                class="slide-description-box"
+                style="left: <%= (typeof slide.descriptionPositionX === 'number' ? slide.descriptionPositionX : 50) %>%; top: <%= (typeof slide.descriptionPositionY === 'number' ? slide.descriptionPositionY : 78) %>%; color: <%= slide.descriptionFontColor || '#ffffff' %>; font-size: <%= slide.descriptionFontSize || 14 %>px; font-weight: <%= slide.descriptionFontWeight || '400' %>; background-color: <%= slide.descriptionBgColor || '#000000' %>;"
+              >
+                <span class="slide-description"><%= slide.companyDescription %></span>
+              </div>
+            <% } %>
+          </div>
+        <% }) %>
+      </div>
+      <button class="carousel-btn prev" aria-label="Previous slide">&#8249;</button>
+      <button class="carousel-btn next" aria-label="Next slide">&#8250;</button>
+      <div class="carousel-dots">
+        <% slides.forEach((_, i) => { %>
+          <button class="carousel-dot<%= i === 0 ? ' active' : '' %>" aria-label="Go to slide <%= i + 1 %>"></button>
+        <% }) %>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="carousel-placeholder" id="carouselPlaceholderContent">
+      <p><strong>Placeholder Parts</strong> &mdash; Advertise on carousel <strong>$100/month</strong></p>
+      <a href="/advertise/carousel" class="btn btn-primary">Advertise Here</a>
+    </div>
+    <div id="carouselBuilderMirror" class="carousel-builder-mirror"></div>
+  <% } %>
+</section>

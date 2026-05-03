@@ -1,0 +1,71 @@
+<%- include('partials/head-open', { slides: [] }) %>
+
+<main class="auth-main">
+  <div class="auth-card">
+    <h1>Create Your Account</h1>
+    <%- include('partials/flash') %>
+    <form method="POST" action="/register" novalidate>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName">First Name <span class="required">*</span></label>
+          <input type="text" id="firstName" name="firstName" value="<%= oldInput.firstName || '' %>" required maxlength="50" autocomplete="given-name" />
+        </div>
+        <div class="form-group">
+          <label for="lastName">Last Name <span class="required">*</span></label>
+          <input type="text" id="lastName" name="lastName" value="<%= oldInput.lastName || '' %>" required maxlength="50" autocomplete="family-name" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address <span class="required">*</span></label>
+        <input type="email" id="email" name="email" value="<%= oldInput.email || '' %>" required maxlength="254" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" name="phone" value="<%= oldInput.phone || '' %>" maxlength="30" autocomplete="tel" />
+      </div>
+      <div class="form-group">
+        <label for="companyName">Company Name</label>
+        <input type="text" id="companyName" name="companyName" value="<%= oldInput.companyName || '' %>" maxlength="120" autocomplete="organization" />
+      </div>
+      <div class="form-group">
+        <label for="companyWebsite">Company Website <span class="required">*</span></label>
+        <input type="url" id="companyWebsite" name="companyWebsite" value="<%= oldInput.companyWebsite || '' %>" required maxlength="255" placeholder="https://yoursite.com" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password <span class="required">*</span></label>
+        <div class="password-wrap">
+          <input type="password" id="password" name="password" required minlength="8" maxlength="128" autocomplete="new-password" />
+          <button type="button" class="pw-toggle" data-toggle-password="password" aria-label="Show password">
+            <svg data-icon-show xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg data-icon-hide xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+            <span class="pw-toggle-text" data-toggle-text>Show</span>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password <span class="required">*</span></label>
+        <div class="password-wrap">
+          <input type="password" id="confirmPassword" name="confirmPassword" required maxlength="128" autocomplete="new-password" data-match="#password" />
+          <button type="button" class="pw-toggle" data-toggle-password="confirmPassword" aria-label="Show password">
+            <svg data-icon-show xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg data-icon-hide xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+            <span class="pw-toggle-text" data-toggle-text>Show</span>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+    </form>
+    <p class="auth-alt">Already have an account? <a href="/login">Login</a></p>
+  </div>
+</main>
+
+<script src="/js/passwordToggle.js" defer></script>
+<%- include('partials/foot-close') %>

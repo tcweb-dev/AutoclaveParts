@@ -1,0 +1,93 @@
+<%- include('head') %>
+
+<h1>Admin Dashboard</h1>
+
+<section class="admin-section">
+  <h2>Pending Carousel Ads (<%= pendingSlides.length %>)</h2>
+  <% if (pendingSlides.length > 0) { %>
+    <div class="admin-cards">
+      <% pendingSlides.forEach(slide => { %>
+        <div class="admin-card">
+          <img src="<%= slide.picturePath %>" alt="<%= slide.companyName %>" class="admin-thumb" />
+          <div>
+            <strong><%= slide.companyName %></strong>
+            <% if (slide.customerId) { %><p><small><%= slide.customerId.firstName %> <%= slide.customerId.lastName %> &lt;<%= slide.customerId.email %>&gt;</small></p><% } %>
+            <p>Phone: <%= slide.companyPhone || '–' %></p>
+            <p>Link: <%= slide.linkUrl || '–' %></p>
+            <p>Submitted: <%= new Date(slide.createdAt).toLocaleString() %></p>
+            <div class="admin-actions">
+              <form method="POST" action="/secure-admin/slides/carousel/<%= slide._id %>/approve" style="display:inline">
+                <button class="btn btn-sm btn-primary">Approve</button>
+              </form>
+              <form method="POST" action="/secure-admin/slides/carousel/<%= slide._id %>/remove" style="display:inline">
+                <button class="btn btn-sm btn-danger">Remove</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } else { %><p>No pending carousel ads.</p><% } %>
+</section>
+
+<section class="admin-section">
+  <h2>Pending Grid Ads (<%= pendingGridAds.length %>)</h2>
+  <% if (pendingGridAds.length > 0) { %>
+    <div class="admin-cards">
+      <% pendingGridAds.forEach(ad => { %>
+        <div class="admin-card">
+          <img src="<%= ad.picturePath %>" alt="<%= ad.companyName %>" class="admin-thumb" />
+          <div>
+            <strong><%= ad.companyName %></strong>
+            <% if (ad.customerId) { %><p><small><%= ad.customerId.firstName %> <%= ad.customerId.lastName %> &lt;<%= ad.customerId.email %>&gt;</small></p><% } %>
+            <p>Phone: <%= ad.companyPhone || '–' %></p>
+            <p>Submitted: <%= new Date(ad.createdAt).toLocaleString() %></p>
+            <div class="admin-actions">
+              <form method="POST" action="/secure-admin/slides/grid/<%= ad._id %>/approve" style="display:inline">
+                <button class="btn btn-sm btn-primary">Approve</button>
+              </form>
+              <form method="POST" action="/secure-admin/slides/grid/<%= ad._id %>/remove" style="display:inline">
+                <button class="btn btn-sm btn-danger">Remove</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } else { %><p>No pending grid ads.</p><% } %>
+</section>
+
+<section class="admin-section">
+  <h2>Recent Customers (<%= customers.length %>)</h2>
+  <table class="admin-table">
+    <thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Joined</th><th>Active Ads</th></tr></thead>
+    <tbody>
+      <% customers.forEach(c => { %>
+        <% const cAds = activeAdsByCustomer[c._id.toString()] || []; %>
+        <tr>
+          <td><%= c.firstName %> <%= c.lastName %></td>
+          <td><%= c.email %></td>
+          <td><%= c.companyName || '–' %></td>
+          <td><%= new Date(c.createdAt).toLocaleDateString() %></td>
+          <td>
+            <% if (cAds.length === 0) { %>
+              <span class="admin-no-ads">–</span>
+            <% } else { %>
+              <ul class="admin-ads-list">
+                <% cAds.forEach(ad => { %>
+                  <li>
+                    <span class="admin-ad-badge admin-ad-badge--<%= ad.type.toLowerCase() %>"><%= ad.type %></span>
+                    <%= ad.companyName %>
+                    <% if (ad.expiresAt) { %><small>(expires <%= new Date(ad.expiresAt).toLocaleDateString() %>)</small><% } %>
+                  </li>
+                <% }) %>
+              </ul>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</section>
+
+<%- include('foot') %>

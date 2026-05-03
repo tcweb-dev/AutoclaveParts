@@ -1,0 +1,69 @@
+<%- include('partials/head-open') %>
+
+<div class="page-layout">
+  <%- include('partials/sidebar', { sidebarItems }) %>
+
+  <main class="main-content">
+    <%- include('partials/flash') %>
+
+    <section class="home-intro">
+      <h1 class="visually-hidden">Placeholder Parts – Autoclave, Sterilizer &amp; Medical Equipment Parts Marketplace</h1>
+      <div class="promo-banner">
+        <p>Advertise on the carousel &mdash; <strong>$100/month</strong> &nbsp;|&nbsp; Grid ad &mdash; <strong>$50/month</strong></p>
+        <a href="/advertise" class="btn btn-primary">Advertise Now</a>
+      </div>
+    </section>
+
+    <% if (gridAds && gridAds.length > 0) { %>
+      <section aria-label="Featured parts and supplies">
+        <div class="ad-grid">
+          <% gridAds.forEach(ad => { %>
+            <article class="ad-card<%= ad.animationEnabled ? ' ad-animate' : '' %>" data-adid="<%= ad._id %>">
+              <% if (ad.linkUrl) { %>
+                <a href="<%= ad.linkUrl %>" target="_blank" rel="noopener noreferrer" class="ad-card-link">
+              <% } %>
+              <img
+                src="<%= ad.picturePath %>"
+                alt="<%= ad.companyName %> – autoclave and medical equipment parts"
+                loading="lazy"
+                class="ad-card-img"
+                style="object-position: <%= (
+                  (typeof ad.imagePositionX === 'number' && typeof ad.imagePositionY === 'number')
+                    ? (ad.imagePositionX + '% ' + ad.imagePositionY + '%')
+                    : (
+                      ad.imagePosition === 'top' ? 'center top' :
+                      ad.imagePosition === 'bottom' ? 'center bottom' :
+                      ad.imagePosition === 'left' ? 'left center' :
+                      ad.imagePosition === 'right' ? 'right center' :
+                      ad.imagePosition === 'top-left' ? 'left top' :
+                      ad.imagePosition === 'top-right' ? 'right top' :
+                      ad.imagePosition === 'bottom-left' ? 'left bottom' :
+                      ad.imagePosition === 'bottom-right' ? 'right bottom' :
+                      'center center'
+                    )
+                ) %>; --img-scale: <%= (((ad.imageScale || 100) / 100).toFixed(2)) %>; --img-fit: <%= ad.imageFitMode === 'cover' ? 'cover' : 'contain' %>;"
+              />
+              <% if (ad.linkUrl) { %></a><% } %>
+              <div class="ad-card-body caption-<%= ad.captionPosition || 'bottom-left' %>">
+                <h2 class="ad-card-name"><%= ad.companyName %></h2>
+                <% if (ad.status === 'pending') { %><p class="ad-card-phone">Pending approval (visible only to you)</p><% } %>
+                <% if (ad.companyPhone) { %><p class="ad-card-phone"><%= ad.companyPhone %></p><% } %>
+                <% if (ad.companyDescription) { %><p class="ad-card-description"><%= ad.companyDescription %></p><% } %>
+                <% if (ad.companyWebsite) { %><p class="ad-card-site"><a href="<%= ad.companyWebsite.startsWith('http') ? ad.companyWebsite : 'https://' + ad.companyWebsite %>" target="_blank" rel="noopener noreferrer"><%= ad.companyWebsite %></a></p><% } %>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      </section>
+    <% } else { %>
+      <div class="ad-grid-placeholder">
+        <div class="ad-placeholder-box">
+          <p>Placeholder Parts &mdash; Advertise here <strong>$50/month</strong></p>
+          <a href="/advertise/grid" class="btn btn-secondary">Get Started</a>
+        </div>
+      </div>
+    <% } %>
+  </main>
+</div>
+
+<%- include('partials/foot-close') %>

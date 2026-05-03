@@ -1,0 +1,78 @@
+<%- include('partials/head-open', { slides: [] }) %>
+
+<main class="page-main">
+  <div class="container">
+    <h1>My Dashboard</h1>
+    <%- include('partials/flash') %>
+
+    <section class="dashboard-section">
+      <h2>Carousel Ads</h2>
+      <% if (carouselAds.length > 0) { %>
+        <div class="dashboard-grid">
+          <% carouselAds.forEach(ad => { %>
+            <div class="dashboard-card status-<%= ad.status %>">
+              <div class="dashboard-thumb">
+                <img src="<%= ad.picturePath %>" alt="<%= ad.companyName %>"
+                  style="object-fit: <%= ad.imageFitMode === 'cover' ? 'cover' : 'contain' %>; object-position: <%= (typeof ad.imagePositionX === 'number' && typeof ad.imagePositionY === 'number') ? (ad.imagePositionX + '% ' + ad.imagePositionY + '%') : 'center center' %>; transform: scale(<%= ((ad.imageScale || 100) / 100).toFixed(2) %>);"
+                />
+              </div>
+              <div class="dashboard-card-body">
+                <h3><%= ad.companyName %></h3>
+                <span class="badge badge-<%= ad.status %>"><%= ad.status %></span>
+                <% if (ad.expiresAt) { %><p>Expires: <%= new Date(ad.expiresAt).toLocaleDateString() %></p><% } %>
+                <div class="dashboard-actions">
+                  <% if (!['expired','cancelled'].includes(ad.status)) { %>
+                    <a href="/dashboard/edit/carousel/<%= ad._id %>" class="btn btn-sm btn-secondary">Edit</a>
+                    <form method="POST" action="/dashboard/cancel/carousel/<%= ad._id %>" class="inline-form">
+                      <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Cancel this ad? No refund will be issued.')">Cancel</button>
+                    </form>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <p>No carousel ads yet. <a href="/advertise/carousel">Create one</a></p>
+      <% } %>
+    </section>
+
+    <section class="dashboard-section">
+      <h2>Grid Ads</h2>
+      <% if (gridAds.length > 0) { %>
+        <div class="dashboard-grid">
+          <% gridAds.forEach(ad => { %>
+            <div class="dashboard-card status-<%= ad.status %>">
+              <div class="dashboard-thumb">
+                <img src="<%= ad.picturePath %>" alt="<%= ad.companyName %>"
+                  style="object-fit: <%= ad.imageFitMode === 'cover' ? 'cover' : 'contain' %>; object-position: <%= (typeof ad.imagePositionX === 'number' && typeof ad.imagePositionY === 'number') ? (ad.imagePositionX + '% ' + ad.imagePositionY + '%') : 'center center' %>; transform: scale(<%= ((ad.imageScale || 100) / 100).toFixed(2) %>);"
+                />
+              </div>
+                style="object-fit: <%= ad.imageFitMode === 'cover' ? 'cover' : 'contain' %>; object-position: <%= (typeof ad.imagePositionX === 'number' && typeof ad.imagePositionY === 'number') ? (ad.imagePositionX + '% ' + ad.imagePositionY + '%') : 'center center' %>; transform: scale(<%= ((ad.imageScale || 100) / 100).toFixed(2) %>); transform-origin: center center;"
+              />
+              <div class="dashboard-card-body">
+                <h3><%= ad.companyName %></h3>
+                <span class="badge badge-<%= ad.status %>"><%= ad.status %></span>
+                <% if (ad.expiresAt) { %><p>Expires: <%= new Date(ad.expiresAt).toLocaleDateString() %></p><% } %>
+                <div class="dashboard-actions">
+                  <% if (!['expired','cancelled'].includes(ad.status)) { %>
+                    <a href="/dashboard/edit/grid/<%= ad._id %>" class="btn btn-sm btn-secondary">Edit</a>
+                    <form method="POST" action="/dashboard/cancel/grid/<%= ad._id %>" class="inline-form">
+                      <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Cancel this ad? No refund will be issued.')">Cancel</button>
+                    </form>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <p>No grid ads yet. <a href="/advertise/grid">Create one</a></p>
+      <% } %>
+    </section>
+
+    <a href="/advertise" class="btn btn-primary">Place a New Ad</a>
+  </div>
+</main>
+
+<%- include('partials/foot-close') %>

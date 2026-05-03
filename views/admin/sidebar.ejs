@@ -1,0 +1,47 @@
+<%- include('head') %>
+
+<h1>Manage Sidebar</h1>
+
+<section class="admin-section">
+  <h2>Add Item</h2>
+  <form method="POST" action="/secure-admin/sidebar" class="inline-form-row">
+    <div class="form-group">
+      <label for="label">Label</label>
+      <input type="text" id="label" name="label" required maxlength="100" />
+    </div>
+    <div class="form-group">
+      <label for="hrefUrl">Link URL (optional)</label>
+      <input type="url" id="hrefUrl" name="hrefUrl" maxlength="255" placeholder="https://..." />
+    </div>
+    <div class="form-group">
+      <label for="order">Order</label>
+      <input type="number" id="order" name="order" value="0" min="0" style="width:80px" />
+    </div>
+    <button type="submit" class="btn btn-primary">Add</button>
+  </form>
+</section>
+
+<section class="admin-section">
+  <h2>Current Items</h2>
+  <% if (items.length > 0) { %>
+    <table class="admin-table">
+      <thead><tr><th>Order</th><th>Label</th><th>Link</th><th>Action</th></tr></thead>
+      <tbody>
+        <% items.forEach(item => { %>
+          <tr>
+            <td><%= item.order %></td>
+            <td><%= item.label %></td>
+            <td><%= item.hrefUrl || '–' %></td>
+            <td>
+              <form method="POST" action="/secure-admin/sidebar/<%= item._id %>/delete" style="display:inline">
+                <button class="btn btn-sm btn-danger" onclick="return confirm('Remove this item?')">Delete</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } else { %><p>No sidebar items yet.</p><% } %>
+</section>
+
+<%- include('foot') %>

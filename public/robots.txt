@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /secure-admin/
+Disallow: /uploads/
+
+Sitemap: https://placeholderparts.com/sitemap.xml

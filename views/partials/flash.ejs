@@ -1,0 +1,18 @@
+<% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+  <div
+    class="alert alert-error alert-validation"
+    role="alert"
+    data-error-fields='<%= JSON.stringify(errors.map(e => e.path).filter(Boolean)) %>'
+  >
+    <p class="alert-validation-intro">Please review the highlighted fields and complete them before submitting again.</p>
+    <ul>
+      <% errors.forEach(e => { %><li><%= e.msg %></li><% }) %>
+    </ul>
+  </div>
+<% } %>
+<% if (typeof flashSuccess !== 'undefined' && flashSuccess) { %>
+  <div class="alert alert-success" role="alert"><%= flashSuccess %></div>
+<% } %>
+<% if (typeof flashError !== 'undefined' && flashError) { %>
+  <div class="alert alert-error" role="alert"><%= flashError %></div>
+<% } %>

@@ -1,0 +1,10 @@
+<%- include('head') %>
+
+<h1>Audit Logs</h1>
+<p>Showing last 200 lines of <code>logs/combined.log</code></p>
+
+<div class="log-viewer">
+  <pre><%= logContent %></pre>
+</div>
+
+<%- include('foot') %>

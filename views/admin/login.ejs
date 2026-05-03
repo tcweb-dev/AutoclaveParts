@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login | PlaceholderParts</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="admin-body">
+  <main class="auth-main">
+    <div class="auth-card">
+      <h1>Admin Login</h1>
+      <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+        <div class="alert alert-error alert-validation" role="alert" data-error-fields='<%= JSON.stringify(errors.map(e => e.path).filter(Boolean)) %>'>
+          <p class="alert-validation-intro">Please review the highlighted fields and complete them before submitting again.</p>
+          <ul><% errors.forEach(e => { %><li><%= e.msg %></li><% }) %></ul>
+        </div>
+      <% } %>
+      <form method="POST" action="/secure-admin/login" novalidate>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Login</button>
+      </form>
+    </div>
+  </main>
+  <script src="/js/clientFormValidation.js" defer></script>
+  <script src="/js/formErrorHighlight.js" defer></script>
+</body>
+</html>

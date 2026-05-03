@@ -1,0 +1,386 @@
+<%- include('partials/head-open', { slides: [] }) %>
+
+<main class="page-main">
+  <div class="container form-container ad-form-container">
+    <h1><%= title %></h1>
+    <%- include('partials/flash') %>
+
+    <form
+      method="POST"
+      action="<%= editMode ? '/dashboard/edit/' + adType + '/' + ad._id : '/advertise/' + adType %>"
+      enctype="multipart/form-data"
+      novalidate
+      id="adForm"
+    >
+      <div class="ad-builder-layout">
+        <div class="ad-builder-left">
+          <div class="form-group">
+            <label for="companyName">Company Name <span class="required">*</span></label>
+            <input type="text" id="companyName" name="companyName"
+              value="<%= (typeof ad !== 'undefined' && ad.companyName) ? ad.companyName : (oldInput.companyName || '') %>"
+              required maxlength="120" />
+          </div>
+
+          <div class="form-group">
+            <label for="companyWebsite">Company Website</label>
+            <input type="url" id="companyWebsite" name="companyWebsite"
+              value="<%= (typeof ad !== 'undefined' && ad.companyWebsite) ? ad.companyWebsite : (oldInput.companyWebsite || '') %>"
+              maxlength="255" placeholder="https://yourcompany.com" />
+          </div>
+
+          <div class="form-group">
+            <label for="companyPhone">Company Phone</label>
+            <input type="tel" id="companyPhone" name="companyPhone"
+              value="<%= (typeof ad !== 'undefined' && ad.companyPhone) ? ad.companyPhone : (oldInput.companyPhone || '') %>"
+              maxlength="30" />
+          </div>
+
+          <div class="form-group">
+            <label for="linkUrl">Click-through URL <small>(customer's website – fires on picture click)</small></label>
+            <input type="url" id="linkUrl" name="linkUrl"
+              value="<%= (typeof ad !== 'undefined' && ad.linkUrl) ? ad.linkUrl : (oldInput.linkUrl || '') %>"
+              maxlength="255" placeholder="https://yoursite.com" />
+            <small class="field-hint">If left blank, your slide image is shown without a clickable link.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="companyDescription">Company Description / Statement <small>(optional)</small></label>
+            <textarea id="companyDescription" name="companyDescription" maxlength="500" rows="4" placeholder="Tell visitors about your company, specialties, or a promotional message..."><%= (typeof ad !== 'undefined' && ad.companyDescription) ? ad.companyDescription : (oldInput.companyDescription || '') %></textarea>
+            <small class="field-hint">Max 500 characters.</small>
+          </div>
+
+          <fieldset class="form-fieldset">
+            <legend>Billing</legend>
+            <div class="form-check">
+              <input type="radio" id="autoRenewNo" name="autoRenew" value="" <%= ((typeof ad !== 'undefined' && !ad.autoRenew) || (typeof ad === 'undefined' && oldInput.autoRenew !== 'on')) ? 'checked' : '' %> />
+              <label for="autoRenewNo">30 days only – I will renew manually</label>
+            </div>
+            <div class="form-check">
+              <input type="radio" id="autoRenewYes" name="autoRenew" value="on" <%= ((typeof ad !== 'undefined' && ad.autoRenew) || (typeof ad === 'undefined' && oldInput.autoRenew === 'on')) ? 'checked' : '' %> />
+              <label for="autoRenewYes">Auto-renew – my card will be charged automatically on the expiration date</label>
+            </div>
+            <p class="form-note"><strong>Note:</strong> Ads expire on the same day of the following month. No refunds are issued for the remaining portion of any period.</p>
+          </fieldset>
+
+        </div>
+
+        <div class="ad-builder-right">
+          <section class="ad-preview-builder" aria-label="Live ad review">
+            <div class="ad-preview-head">
+              <h2>Live <%= adType === 'carousel' ? 'Carousel' : 'Grid' %> Ad Review</h2>
+              <p>Preview updates as you type so you can position your image and info before checkout.</p>
+              <p>Tip: Drag the image to move focus, and drag the caption panel to reposition company info.</p>
+            </div>
+            <div class="ad-preview-shell">
+              <article class="preview-canvas preview-canvas-<%= adType %>" id="livePreview">
+                <% const selectedImageScale = (typeof ad !== 'undefined' && ad.imageScale) ? ad.imageScale : Number(oldInput.imageScale || 100); %>
+                <% const selectedPicture2Scale = (typeof ad !== 'undefined' && ad.picture2Scale) ? ad.picture2Scale : Number(oldInput.picture2Scale || 100); %>
+                <% const selectedDescriptionFontColor = (typeof ad !== 'undefined' && ad && ad.descriptionFontColor) ? ad.descriptionFontColor : (oldInput.descriptionFontColor || '#ffffff'); %>
+                <% const selectedDescriptionFontSize = (typeof ad !== 'undefined' && ad && ad.descriptionFontSize) ? ad.descriptionFontSize : (oldInput.descriptionFontSize || 14); %>
+                <% const selectedDescriptionFontWeight = (typeof ad !== 'undefined' && ad && ad.descriptionFontWeight) ? ad.descriptionFontWeight : (oldInput.descriptionFontWeight || '400'); %>
+                <% const selectedDescriptionBgColor = (typeof ad !== 'undefined' && ad && ad.descriptionBgColor) ? ad.descriptionBgColor : (oldInput.descriptionBgColor || '#000000'); %>
+                <% const selectedImageFitMode = (typeof ad !== 'undefined' && ad.imageFitMode) ? ad.imageFitMode : (oldInput.fillFrameCrop === 'on' ? 'cover' : 'contain'); %>
+                <% const selectedImagePosition = (typeof ad !== 'undefined' && ad.imagePosition) ? ad.imagePosition : (oldInput.imagePosition || 'center'); %>
+                <% const initialImageObjectPosition =
+                  (typeof ad !== 'undefined' && typeof ad.imagePositionX === 'number' && typeof ad.imagePositionY === 'number')
+                    ? (ad.imagePositionX + '% ' + ad.imagePositionY + '%')
+                    : ((oldInput.imagePositionX && oldInput.imagePositionY)
+                      ? (oldInput.imagePositionX + '% ' + oldInput.imagePositionY + '%')
+                      : (
+                        selectedImagePosition === 'top' ? '50% 0%' :
+                        selectedImagePosition === 'bottom' ? '50% 100%' :
+                        selectedImagePosition === 'left' ? '0% 50%' :
+                        selectedImagePosition === 'right' ? '100% 50%' :
+                        selectedImagePosition === 'top-left' ? '0% 0%' :
+                        selectedImagePosition === 'top-right' ? '100% 0%' :
+                        selectedImagePosition === 'bottom-left' ? '0% 100%' :
+                        selectedImagePosition === 'bottom-right' ? '100% 100%' :
+                        '50% 50%'
+                      ));
+                %>
+                <% const selectedCaptionPosition = (typeof ad !== 'undefined' && ad.captionPosition) ? ad.captionPosition : (oldInput.captionPosition || 'top-left'); %>
+                <% const initialCaptionX =
+                  (typeof ad !== 'undefined' && typeof ad.captionPositionX === 'number')
+                    ? ad.captionPositionX
+                    : (oldInput.captionPositionX || (selectedCaptionPosition.includes('right') ? 62 : selectedCaptionPosition.includes('center') ? 30 : 5));
+                %>
+                <% const initialCaptionY =
+                  (typeof ad !== 'undefined' && typeof ad.captionPositionY === 'number')
+                    ? ad.captionPositionY
+                    : (oldInput.captionPositionY || (selectedCaptionPosition.includes('top') ? 5 : 68));
+                %>
+                <% const initialPicture2X =
+                  (typeof ad !== 'undefined' && typeof ad.picture2PositionX === 'number')
+                    ? ad.picture2PositionX
+                    : Number(oldInput.picture2PositionX || 72);
+                %>
+                <% const initialPicture2Y =
+                  (typeof ad !== 'undefined' && typeof ad.picture2PositionY === 'number')
+                    ? ad.picture2PositionY
+                    : Number(oldInput.picture2PositionY || 72);
+                %>
+                <% const initialDescriptionX =
+                  (typeof ad !== 'undefined' && typeof ad.descriptionPositionX === 'number')
+                    ? ad.descriptionPositionX
+                    : Number(oldInput.descriptionPositionX || 50);
+                %>
+                <% const initialDescriptionY =
+                  (typeof ad !== 'undefined' && typeof ad.descriptionPositionY === 'number')
+                    ? ad.descriptionPositionY
+                    : Number(oldInput.descriptionPositionY || 78);
+                %>
+                <img
+                  src="<%= (typeof ad !== 'undefined' && ad.picturePath) ? ad.picturePath : '' %>"
+                  alt="Ad preview image"
+                  class="preview-image"
+                  id="previewImage"
+                  style="--preview-scale: <%= (selectedImageScale / 100).toFixed(2) %>; --preview-fit: <%= selectedImageFitMode %>; object-position: <%= initialImageObjectPosition %>;"
+                />
+                <img
+                  src="<%= (typeof ad !== 'undefined' && ad.picture2Path) ? ad.picture2Path : '' %>"
+                  alt="Ad preview second image"
+                  class="preview-image-secondary"
+                  id="previewImage2"
+                  style="left: <%= initialPicture2X %>%; top: <%= initialPicture2Y %>%; --preview-img2-scale: <%= (selectedPicture2Scale / 100).toFixed(2) %>; display: <%= (typeof ad !== 'undefined' && ad.picture2Path) ? 'block' : 'none' %>;"
+                />
+                <div
+                  class="preview-caption"
+                  id="previewCaption"
+                  style="left: <%= initialCaptionX %>%; top: <%= initialCaptionY %>%;"
+                >
+                  <strong id="previewCompany"><%= (typeof ad !== 'undefined' && ad.companyName) ? ad.companyName : (oldInput.companyName || 'Your Company Name') %></strong>
+                  <span id="previewPhone"><%= (typeof ad !== 'undefined' && ad.companyPhone) ? ad.companyPhone : (oldInput.companyPhone || 'Phone number') %></span>
+                  <span id="previewWebsite"><%= (typeof ad !== 'undefined' && ad.companyWebsite) ? ad.companyWebsite : (oldInput.companyWebsite || 'Website address') %></span>
+                  <span id="previewLinkState" class="preview-link-state">
+                    <%= ((typeof ad !== 'undefined' && ad.linkUrl) || oldInput.linkUrl) ? 'Image click opens your URL' : 'No click-through URL set yet' %>
+                  </span>
+                </div>
+                <div
+                  class="preview-description-box"
+                  id="previewDescriptionBox"
+                  style="left: <%= initialDescriptionX %>%; top: <%= initialDescriptionY %>%; color: <%= selectedDescriptionFontColor %>; font-size: <%= selectedDescriptionFontSize %>px; font-weight: <%= selectedDescriptionFontWeight %>; background-color: <%= selectedDescriptionBgColor %>; display: <%= ((typeof ad !== 'undefined' && ad.companyDescription) || oldInput.companyDescription) ? 'block' : 'none' %>;"
+                >
+                  <span id="previewDescription" class="preview-description"><%= (typeof ad !== 'undefined' && ad.companyDescription) ? ad.companyDescription : (oldInput.companyDescription || '') %></span>
+                </div>
+                <span class="preview-badge"><%= adType === 'carousel' ? 'Carousel' : 'Grid' %> preview</span>
+              </article>
+            </div>
+          </section>
+
+          <div class="upload-style-row">
+            <div class="upload-controls-panel">
+              <div class="upload-files-row">
+                <div class="form-group upload-group">
+                  <label for="picture">
+                    <% if (editMode) { %>Upload New Picture <small>(leave blank to keep existing)</small><% } else { %>Upload Picture<% } %>
+                  </label>
+                  <input type="file" id="picture" name="picture" accept=".jpg,.jpeg,.png,.gif" />
+                  <% if (editMode && ad && ad.picturePath) { %>
+                    <div class="current-image">
+                      <img src="<%= ad.picturePath %>" alt="Current ad image" />
+                      <small>Current image</small>
+                    </div>
+                    <div class="form-check upload-remove-check">
+                      <input
+                        type="checkbox"
+                        id="removePicture"
+                        name="removePicture"
+                        value="on"
+                        <%= oldInput.removePicture === 'on' ? 'checked' : '' %>
+                      />
+                      <label for="removePicture">Remove current main picture</label>
+                    </div>
+                  <% } %>
+                  <small class="field-hint">JPEG, PNG or GIF – max 5 MB</small>
+                </div>
+
+                <div class="form-group upload-group">
+                  <label for="picture2">
+                    <% if (editMode) { %>Upload Second Picture <small>(optional – leave blank to keep existing)</small><% } else { %>Upload Second Picture <small>(optional)</small><% } %>
+                  </label>
+                  <input type="file" id="picture2" name="picture2" accept=".jpg,.jpeg,.png,.gif" />
+                  <div class="current-image" id="currentSecondImageWrap" style="<%= (editMode && ad && ad.picture2Path) ? '' : 'display:none;' %>">
+                    <img id="currentSecondImage" src="<%= (editMode && ad && ad.picture2Path) ? ad.picture2Path : '' %>" alt="Current second image" />
+                    <small id="currentSecondImageLabel"><%= (editMode && ad && ad.picture2Path) ? 'Current second image' : 'Selected second image' %></small>
+                  </div>
+                  <% if (editMode && ad && ad.picture2Path) { %>
+                    <div class="form-check upload-remove-check">
+                      <input
+                        type="checkbox"
+                        id="removePicture2"
+                        name="removePicture2"
+                        value="on"
+                        <%= oldInput.removePicture2 === 'on' ? 'checked' : '' %>
+                      />
+                      <label for="removePicture2">Remove current second picture</label>
+                    </div>
+                  <% } %>
+                  <input type="hidden" id="picture2PositionX" name="picture2PositionX" value="<%= initialPicture2X %>" />
+                  <input type="hidden" id="picture2PositionY" name="picture2PositionY" value="<%= initialPicture2Y %>" />
+                  <small class="field-hint">JPEG, PNG or GIF – max 5 MB</small>
+                </div>
+              </div>
+
+              <div class="upload-scale-stack">
+                <div class="form-group">
+                  <label for="imageScale">Resize Picture 1 In Ad</label>
+                  <div class="scale-control-row">
+                    <input
+                      type="range"
+                      id="imageScale"
+                      name="imageScale"
+                      min="20"
+                      max="160"
+                      step="1"
+                      value="<%= selectedImageScale %>"
+                    />
+                    <button type="button" class="btn btn-sm btn-secondary scale-reset-btn" id="resetImageScale">Reset Picture 1</button>
+                  </div>
+                  <small class="field-hint">Picture 1 size: <span id="imageScaleValue"><%= selectedImageScale %></span>%</small>
+                </div>
+
+                <div class="form-group">
+                  <label for="picture2Scale">Resize Picture 2 In Ad</label>
+                  <div class="scale-control-row">
+                    <input
+                      type="range"
+                      id="picture2Scale"
+                      name="picture2Scale"
+                      min="20"
+                      max="160"
+                      step="1"
+                      value="<%= selectedPicture2Scale %>"
+                    />
+                    <button type="button" class="btn btn-sm btn-secondary scale-reset-btn" id="resetPicture2Scale">Reset Picture 2</button>
+                  </div>
+                  <small class="field-hint">Picture 2 size: <span id="picture2ScaleValue"><%= selectedPicture2Scale %></span>%</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="style-controls-panel">
+              <p class="style-controls-title">Company Caption Style</p>
+              <div class="style-controls-grid">
+                <div class="form-group">
+                  <label for="captionFontColor">Caption Text Color</label>
+                  <input type="color" id="captionFontColor" name="captionFontColor"
+                    value="<%= (typeof ad !== 'undefined' && ad && ad.captionFontColor) ? ad.captionFontColor : (oldInput.captionFontColor || '#ffffff') %>" />
+                </div>
+                <div class="form-group">
+                  <label for="slideBgColor">Slide Background Color</label>
+                  <input type="color" id="slideBgColor" name="slideBgColor"
+                    value="<%= (typeof ad !== 'undefined' && ad && ad.slideBgColor) ? ad.slideBgColor : (oldInput.slideBgColor || '#000000') %>" />
+                </div>
+                <div class="form-group">
+                  <label for="captionFontSize">Font Size (<span id="fontSizeVal"><%= (typeof ad !== 'undefined' && ad && ad.captionFontSize) ? ad.captionFontSize : (oldInput.captionFontSize || 16) %></span>px)</label>
+                  <input type="range" id="captionFontSize" name="captionFontSize"
+                    min="10" max="48" step="1"
+                    value="<%= (typeof ad !== 'undefined' && ad && ad.captionFontSize) ? ad.captionFontSize : (oldInput.captionFontSize || 16) %>" />
+                </div>
+                <div class="form-group">
+                  <label for="captionFontWeight">Font Weight</label>
+                  <select id="captionFontWeight" name="captionFontWeight">
+                    <% const selWeight = (typeof ad !== 'undefined' && ad && ad.captionFontWeight) ? ad.captionFontWeight : (oldInput.captionFontWeight || '600'); %>
+                    <option value="400" <%= selWeight === '400' ? 'selected' : '' %>>Normal</option>
+                    <option value="600" <%= selWeight === '600' ? 'selected' : '' %>>Semi-Bold</option>
+                    <option value="700" <%= selWeight === '700' ? 'selected' : '' %>>Bold</option>
+                    <option value="900" <%= selWeight === '900' ? 'selected' : '' %>>Extra Bold</option>
+                  </select>
+                </div>
+              </div>
+
+              <p class="style-controls-title">Description Style</p>
+              <div class="style-controls-grid">
+                <div class="form-group">
+                  <label for="descriptionFontColor">Description Text Color</label>
+                  <input type="color" id="descriptionFontColor" name="descriptionFontColor"
+                    value="<%= selectedDescriptionFontColor %>" />
+                </div>
+                <div class="form-group">
+                  <label for="descriptionBgColor">Description Background Color</label>
+                  <input type="color" id="descriptionBgColor" name="descriptionBgColor"
+                    value="<%= selectedDescriptionBgColor %>" />
+                </div>
+                <div class="form-group">
+                  <label for="descriptionFontSize">Font Size (<span id="descriptionFontSizeVal"><%= selectedDescriptionFontSize %></span>px)</label>
+                  <input type="range" id="descriptionFontSize" name="descriptionFontSize"
+                    min="10" max="48" step="1"
+                    value="<%= selectedDescriptionFontSize %>" />
+                </div>
+                <div class="form-group">
+                  <label for="descriptionFontWeight">Font Weight</label>
+                  <select id="descriptionFontWeight" name="descriptionFontWeight">
+                    <% const selDescriptionWeight = selectedDescriptionFontWeight; %>
+                    <option value="400" <%= selDescriptionWeight === '400' ? 'selected' : '' %>>Normal</option>
+                    <option value="600" <%= selDescriptionWeight === '600' ? 'selected' : '' %>>Semi-Bold</option>
+                    <option value="700" <%= selDescriptionWeight === '700' ? 'selected' : '' %>>Bold</option>
+                    <option value="900" <%= selDescriptionWeight === '900' ? 'selected' : '' %>>Extra Bold</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="captionPosition">Move Company Info To</label>
+              <select id="captionPosition" name="captionPosition">
+                <option value="top-left" <%= selectedCaptionPosition === 'top-left' ? 'selected' : '' %>>Top Left</option>
+                <option value="top-center" <%= selectedCaptionPosition === 'top-center' ? 'selected' : '' %>>Top Center</option>
+                <option value="top-right" <%= selectedCaptionPosition === 'top-right' ? 'selected' : '' %>>Top Right</option>
+                <option value="bottom-left" <%= selectedCaptionPosition === 'bottom-left' ? 'selected' : '' %>>Bottom Left</option>
+                <option value="bottom-center" <%= selectedCaptionPosition === 'bottom-center' ? 'selected' : '' %>>Bottom Center</option>
+                <option value="bottom-right" <%= selectedCaptionPosition === 'bottom-right' ? 'selected' : '' %>>Bottom Right</option>
+              </select>
+              <input type="hidden" id="captionPositionX" name="captionPositionX" value="<%= initialCaptionX %>" />
+              <input type="hidden" id="captionPositionY" name="captionPositionY" value="<%= initialCaptionY %>" />
+              <input type="hidden" id="descriptionPositionX" name="descriptionPositionX" value="<%= initialDescriptionX %>" />
+              <input type="hidden" id="descriptionPositionY" name="descriptionPositionY" value="<%= initialDescriptionY %>" />
+            </div>
+
+            <div class="form-group">
+              <label for="imagePosition">Move Picture Focus To</label>
+              <select id="imagePosition" name="imagePosition">
+                <option value="center" <%= selectedImagePosition === 'center' ? 'selected' : '' %>>Center</option>
+                <option value="top" <%= selectedImagePosition === 'top' ? 'selected' : '' %>>Top</option>
+                <option value="bottom" <%= selectedImagePosition === 'bottom' ? 'selected' : '' %>>Bottom</option>
+                <option value="left" <%= selectedImagePosition === 'left' ? 'selected' : '' %>>Left</option>
+                <option value="right" <%= selectedImagePosition === 'right' ? 'selected' : '' %>>Right</option>
+                <option value="top-left" <%= selectedImagePosition === 'top-left' ? 'selected' : '' %>>Top Left</option>
+                <option value="top-right" <%= selectedImagePosition === 'top-right' ? 'selected' : '' %>>Top Right</option>
+                <option value="bottom-left" <%= selectedImagePosition === 'bottom-left' ? 'selected' : '' %>>Bottom Left</option>
+                <option value="bottom-right" <%= selectedImagePosition === 'bottom-right' ? 'selected' : '' %>>Bottom Right</option>
+              </select>
+              <input type="hidden" id="imagePositionX" name="imagePositionX" value="<%= (typeof ad !== 'undefined' && typeof ad.imagePositionX === 'number') ? ad.imagePositionX : (oldInput.imagePositionX || '') %>" />
+              <input type="hidden" id="imagePositionY" name="imagePositionY" value="<%= (typeof ad !== 'undefined' && typeof ad.imagePositionY === 'number') ? ad.imagePositionY : (oldInput.imagePositionY || '') %>" />
+            </div>
+          </div>
+
+          <div class="form-group form-check">
+            <input
+              type="checkbox"
+              id="fillFrameCrop"
+              name="fillFrameCrop"
+              <%= ((typeof ad !== 'undefined' && ad.imageFitMode === 'cover') || (typeof ad === 'undefined' && oldInput.fillFrameCrop === 'on')) ? 'checked' : '' %>
+            />
+            <label for="fillFrameCrop">Fill frame (crop)</label>
+          </div>
+
+          <div class="form-group form-check">
+            <input type="checkbox" id="animationEnabled" name="animationEnabled"
+              <%= ((typeof ad !== 'undefined' && ad.animationEnabled) || (typeof ad === 'undefined' && oldInput.animationEnabled === 'on')) ? 'checked' : '' %> />
+            <label for="animationEnabled">Enable animation on my ad image</label>
+          </div>
+
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full">
+        <%= editMode ? 'Save Ad Changes' : 'Save Ad and Continue to Payment' %>
+      </button>
+    </form>
+    <script src="/js/formValidation.js?v=20260501" type="module"></script>
+  </div>
+</main>
+
+<%- include('partials/foot-close') %>

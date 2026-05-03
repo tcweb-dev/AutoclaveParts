@@ -1,0 +1,40 @@
+<%- include('head') %>
+
+<h1>Dev Test Tools</h1>
+<div class="alert alert-info">
+  These tools are only available in <strong>development</strong> mode.
+</div>
+
+<section class="admin-section">
+  <h2>Seed Test Data</h2>
+  <p>
+    Inserts test customers, carousel slides, grid ads, and sidebar items into
+    the database.
+  </p>
+  <form method="POST" action="/secure-admin/test/seed">
+    <button
+      type="submit"
+      class="btn btn-primary"
+      onclick="
+        return confirm(
+          'This will insert seed data. Existing records are kept.',
+        );
+      "
+    >
+      Run Seed
+    </button>
+  </form>
+</section>
+
+<section class="admin-section">
+  <h2>Quick Links</h2>
+  <ul>
+    <li><a href="/">Home Page</a></li>
+    <li><a href="/advertise">Advertise Page</a></li>
+    <li><a href="/login">Customer Login</a></li>
+    <li><a href="/register">Customer Register</a></li>
+    <li><a href="/secure-admin">Admin Dashboard</a></li>
+  </ul>
+</section>
+
+<%- include('foot') %>
