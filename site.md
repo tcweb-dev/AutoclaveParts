@@ -16,8 +16,8 @@ hidden from all customers. Create a database, called Customers. Fields in each
 customer document should have all of the typical fields for an e-commerce site,
 and include up to 3 fields for customer uploaded pictures, picture1 picture2 and
 picture3. Provide readable logging file for administration to follow up on
-client form input, purchase's, emails etc.
-Administration needs to have a way to send emails to all customer emails in data base
+client form input, purchase's, emails etc. Administration needs to have a way to
+send emails to all customer emails in data base
 
 TESTING The administration needs a way to test the site while in development.
 such as adding carousel test pictures, links, form input. Probably by using
@@ -37,17 +37,26 @@ the items in the grid will have customer input the same as "carousel slides"
 below but will fit into one of the grid spaces and not rotate. the grid item can
 have animation if the client chooses.
 
-FAVICON
-Make a favicon,
+FAVICON Make a favicon,
 
 HEADER header background, rgb(0, 0, 255) light colored text color: #e1e6e2; or
 rgb(225, 230, 226) the header is at the top of all pages A header with the words
 "Placeholder Parts - Search For Parts, Supplies and More!" 3.5rem, #e1e6e2; or
 rgb(225, 230, 226) links in header, advertise, login,
 
-LOG IN / CREATE ACCOUNT.
-Add a log in and "Create Account" function and of course customer authentication.
-form entry or valadation error's. If a form entry fails do not navigate to the home page with a list of error's. If a form entry caused by the client occurs, do not navigate to a new page, leave the client on the same (form entry) page and highlight in light red the errors on the form, perhaps with a gentle prompt above the form stating the highligted fields need to be properly completed. Use true no-refresh validation (same page without roundtrip at all), I can add client-side pre-submit validation on top of this so common input mistakes are caught instantly before request submission. save time
+LOG IN / CREATE ACCOUNT. Add a log in and "Create Account" function and of
+course customer authentication. form entry or valadation error's. If a form
+entry fails do not navigate to the home page with a list of error's. If a form
+entry caused by the client occurs, do not navigate to a new page, leave the
+client on the same (form entry) page and highlight in light red the errors on
+the form, perhaps with a gentle prompt above the form stating the highligted
+fields need to be properly completed. Use true no-refresh validation (same page
+without roundtrip at all), I can add client-side pre-submit validation on top of
+this so common input mistakes are caught instantly before request submission.
+save time.
+
+I AM NOT A ROBOT
+Include a I am not a robot reCAPTCHA with the create Account form
 
 CAROUSEL The carousel is at the top of all pages, under the header A carousel
 populates with slides listed below. carousel slides every 5 seconds
@@ -62,9 +71,12 @@ website. No href for any of the slides, links, until customer provides a link as
 mentioned above. Company Name. Company website address. Company Phone. Upload
 picture, "customer provided picture file, jpeg, jpg, png, gif, etc."
 
-lets add the fucntionality for customer to add a second picture or company description / statement. Add a new form field 
+lets add the fucntionality for customer to add a second picture or company
+description / statement. Add a new form field
 
-Add ability to add a true separate overlay: new saved description coordinates, a draggable description box in preview, and independent rendering on live carousel slides (separate from company/contact caption).
+Add ability to add a true separate overlay: new saved description coordinates, a
+draggable description box in preview, and independent rendering on live carousel
+slides (separate from company/contact caption).
 
 after form is completed route customer to credit card payment page. carousel
 will expire on same day of next month if not enrolled in autopay. give customer
@@ -90,8 +102,8 @@ FORM DATA, customer PROVIDED. Customer email. Company Name. Company website
 address. Company Phone. Upload picture, "client provided picture file, jpeg,
 jpg, png, gif, etc."
 
-CUSTMER EDITS.
-The customer needs a way to edit their ad if needed, grid or carousel.
+CUSTMER EDITS. The customer needs a way to edit their ad if needed, grid or
+carousel.
 
 PAYMENT BY CREDIT CARD customer credit card payment system should be
 implemented. there is not a credit card payment processing means at this time
@@ -101,7 +113,7 @@ SIDE BAR Make a way for administration to add list items to the side bar. side
 bar has a 2rem #222222 border. The side bar has a small header titled "Search".
 the side bar is populated with the following list.
 
-Autoclaves, Bulk Disposable's Endoscopy Exam Chairs, Tables Head Lamps O.R.
-Lights O.R. Tables Property for Sale Sterilizer's, Table Top Vacuum Pumps
+Autoclaves, Disposables Endoscopy Exam Chairs, Tables Head Lamps O.R. Lights
+O.R. Tables Property for Sale Sterilizer's, Table Top Vacuum Pumps
 
 The list items do not have any href links now.

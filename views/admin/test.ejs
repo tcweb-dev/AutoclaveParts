@@ -6,6 +6,34 @@
 </div>
 
 <section class="admin-section">
+  <h2>Admin Idle Timeout</h2>
+  <p>
+    Currently set to <strong><%= adminIdleMinutes %> minute(s)</strong>. Admin
+    is logged out automatically after this period of inactivity.
+  </p>
+  <form
+    method="POST"
+    action="/secure-admin/test/set-idle-timeout"
+    style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap"
+  >
+    <div class="form-group" style="margin: 0">
+      <label for="idleMinutes">Timeout (minutes)</label>
+      <input
+        type="number"
+        id="idleMinutes"
+        name="idleMinutes"
+        min="0.5"
+        max="60"
+        step="0.5"
+        value="<%= adminIdleMinutes %>"
+        style="width: 10rem"
+      />
+    </div>
+    <button type="submit" class="btn btn-secondary">Update Timeout</button>
+  </form>
+</section>
+
+<section class="admin-section">
   <h2>Seed Test Data</h2>
   <p>
     Inserts test customers, carousel slides, grid ads, and sidebar items into

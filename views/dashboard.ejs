@@ -19,6 +19,8 @@
               <div class="dashboard-card-body">
                 <h3><%= ad.companyName %></h3>
                 <span class="badge badge-<%= ad.status %>"><%= ad.status %></span>
+                <% if (ad.maxChargeLimit != null) { %><p>Spending cap: $<%= Number(ad.maxChargeLimit).toFixed(2) %></p><% } %>
+                <% if (ad.billingCapApprovalPending) { %><p class="payment-note">Additional spending approval is pending.</p><% } %>
                 <% if (ad.expiresAt) { %><p>Expires: <%= new Date(ad.expiresAt).toLocaleDateString() %></p><% } %>
                 <div class="dashboard-actions">
                   <% if (!['expired','cancelled'].includes(ad.status)) { %>
@@ -53,6 +55,8 @@
               <div class="dashboard-card-body">
                 <h3><%= ad.companyName %></h3>
                 <span class="badge badge-<%= ad.status %>"><%= ad.status %></span>
+                <% if (ad.maxChargeLimit != null) { %><p>Spending cap: $<%= Number(ad.maxChargeLimit).toFixed(2) %></p><% } %>
+                <% if (ad.billingCapApprovalPending) { %><p class="payment-note">Additional spending approval is pending.</p><% } %>
                 <% if (ad.expiresAt) { %><p>Expires: <%= new Date(ad.expiresAt).toLocaleDateString() %></p><% } %>
                 <div class="dashboard-actions">
                   <% if (!['expired','cancelled'].includes(ad.status)) { %>

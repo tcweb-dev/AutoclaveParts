@@ -12,9 +12,15 @@
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body class="admin-body">
+  <div class="admin-login-topbar">
+    <a href="/" class="admin-login-home-link">&#8592; Back to PlaceholderParts.com</a>
+  </div>
   <main class="auth-main">
     <div class="auth-card">
       <h1>Admin Login</h1>
+      <% if (typeof query !== 'undefined' && query.reason === 'idle') { %>
+        <div class="alert alert-warn" role="alert">You were logged out due to inactivity.</div>
+      <% } %>
       <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
         <div class="alert alert-error alert-validation" role="alert" data-error-fields='<%= JSON.stringify(errors.map(e => e.path).filter(Boolean)) %>'>
           <p class="alert-validation-intro">Please review the highlighted fields and complete them before submitting again.</p>

@@ -9,11 +9,22 @@
       <h2><%= ad.companyName %></h2>
       <p>Ad type: <strong><%= type === 'carousel' ? 'Carousel' : 'Grid' %> Ad</strong></p>
       <p>Amount: <strong>$<%= amount.toFixed(2) %>/month</strong></p>
+      <% if (ad.maxChargeLimit != null) { %>
+        <p>Maximum charge limit: <strong>$<%= Number(ad.maxChargeLimit).toFixed(2) %></strong></p>
+      <% } %>
       <p>Expires: <strong>same day next month</strong></p>
       <p class="payment-note">Your ad will go live after payment is confirmed and admin approves it.</p>
     </div>
 
-    <% if (isTestKey) { %>
+    <% if (approvalRequired) { %>
+      <div class="alert alert-warning">
+        <strong>Spending cap reached:</strong> the attempted charge of $<%= amount.toFixed(2) %> is above the current limit of $<%= Number(maxChargeLimit).toFixed(2) %>.
+        Approve additional spending to continue.
+      </div>
+      <form method="POST" action="/payment/approve-more/<%= type %>/<%= ad._id %>">
+        <button type="submit" class="btn btn-primary btn-full">Approve Additional Spending</button>
+      </form>
+    <% } else if (isTestKey) { %>
       <div class="alert alert-info">
         <strong>Development mode:</strong> No live payment processor is configured. Click the button below to simulate a successful payment.
       </div>

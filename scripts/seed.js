@@ -65,7 +65,7 @@ export async function seed() {
   if (!sidebarCount) {
     const items = [
       'Autoclaves',
-      "Bulk Disposable's",
+      'Disposables',
       'Endoscopy',
       'Exam Chairs, Tables',
       'Head Lamps',
@@ -95,7 +95,6 @@ export async function seed() {
       linkUrl: 'https://acmemedical.example.com',
       animationEnabled: true,
       status: 'active',
-      autoRenew: false,
       paidAt: new Date(),
       expiresAt,
     });
@@ -116,7 +115,6 @@ export async function seed() {
       linkUrl: 'https://biotechsupplies.example.com',
       animationEnabled: false,
       status: 'active',
-      autoRenew: true,
       paidAt: new Date(),
       expiresAt,
     });

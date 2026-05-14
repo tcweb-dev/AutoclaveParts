@@ -16,6 +16,7 @@ import {
   bulkEmailRules,
   handleValidation,
 } from '../middleware/validate.js';
+import { decodeHtmlEntities } from '../utils/decodeHtmlEntities.js';
 import { sendBulkEmail } from '../config/mailer.js';
 import { logger } from '../config/logger.js';
 
@@ -25,7 +26,7 @@ const router = Router();
 /* ── Admin Login ────────────────────────────────────────────────────────────── */
 router.get('/login', (req, res) => {
   if (req.session.role === 'admin') return res.redirect('/secure-admin');
-  res.render('admin/login', { title: 'Admin Login' });
+  res.render('admin/login', { title: 'Admin Login', query: req.query });
 });
 
 router.post('/login', adminLoginRules, handleValidation, async (req, res) => {
@@ -43,6 +44,11 @@ router.post('/login', adminLoginRules, handleValidation, async (req, res) => {
   req.session.userId = admin._id.toString();
   req.session.role = 'admin';
   req.session.firstName = admin.firstName;
+  req.session.adminIdleTimeout =
+    Number.isFinite(admin.adminIdleTimeoutMs) && admin.adminIdleTimeoutMs > 0
+      ? admin.adminIdleTimeoutMs
+      : 5 * 60 * 1000;
+  req.session.adminLastActivity = Date.now();
   await AuditLog.create({
     userId: admin._id,
     action: 'admin_login',
@@ -54,7 +60,7 @@ router.post('/login', adminLoginRules, handleValidation, async (req, res) => {
 });
 
 router.get('/logout', (req, res) => {
-  req.session.destroy(() => res.redirect('/secure-admin/login'));
+  req.session.destroy(() => res.redirect('/'));
 });
 
 /* ─── All routes below require admin ─────────────────────────────────────────── */
@@ -62,12 +68,15 @@ router.use(requireAdmin);
 
 /* ── Dashboard ──────────────────────────────────────────────────────────────── */
 router.get('/', async (req, res) => {
+  const inactiveStatuses = ['paused', 'expired', 'cancelled'];
   const [
     pendingSlides,
     pendingGridAds,
     customers,
     activeCarousel,
     activeGrid,
+    inactiveCarousel,
+    inactiveGrid,
     recentLogs,
   ] = await Promise.all([
     CarouselSlide.find({ status: 'pending' })
@@ -81,10 +90,18 @@ router.get('/', async (req, res) => {
       .sort('-createdAt')
       .lean(),
     CarouselSlide.find({ status: 'active' })
-      .select('customerId companyName expiresAt')
+      .select('customerId companyName expiresAt picturePath picture2Path')
       .lean(),
     GridAd.find({ status: 'active' })
-      .select('customerId companyName expiresAt')
+      .select('customerId companyName expiresAt picturePath picture2Path')
+      .lean(),
+    CarouselSlide.find({ status: { $in: inactiveStatuses } })
+      .populate('customerId', 'firstName lastName email')
+      .sort('-inactiveSince -updatedAt')
+      .lean(),
+    GridAd.find({ status: { $in: inactiveStatuses } })
+      .populate('customerId', 'firstName lastName email')
+      .sort('-inactiveSince -updatedAt')
       .lean(),
     AuditLog.find().sort('-createdAt').limit(100).lean(),
   ]);
@@ -98,6 +115,8 @@ router.get('/', async (req, res) => {
       type: 'Carousel',
       companyName: ad.companyName,
       expiresAt: ad.expiresAt,
+      picturePath: ad.picturePath || '',
+      picture2Path: ad.picture2Path || '',
     });
   });
   activeGrid.forEach((ad) => {
@@ -107,6 +126,8 @@ router.get('/', async (req, res) => {
       type: 'Grid',
       companyName: ad.companyName,
       expiresAt: ad.expiresAt,
+      picturePath: ad.picturePath || '',
+      picture2Path: ad.picture2Path || '',
     });
   });
 
@@ -116,6 +137,14 @@ router.get('/', async (req, res) => {
     pendingGridAds,
     customers,
     activeAdsByCustomer,
+    inactiveAds: [
+      ...inactiveCarousel.map((ad) => ({ ...ad, type: 'carousel' })),
+      ...inactiveGrid.map((ad) => ({ ...ad, type: 'grid' })),
+    ].sort((a, b) => {
+      const aDate = new Date(a.inactiveSince || a.updatedAt);
+      const bDate = new Date(b.inactiveSince || b.updatedAt);
+      return bDate - aDate;
+    }),
     recentLogs,
   });
 });
@@ -124,7 +153,10 @@ router.get('/', async (req, res) => {
 router.post('/slides/:type/:id/approve', async (req, res) => {
   const { type, id } = req.params;
   const Model = type === 'carousel' ? CarouselSlide : GridAd;
-  await Model.findByIdAndUpdate(id, { status: 'active' });
+  await Model.findByIdAndUpdate(id, {
+    status: 'active',
+    inactiveSince: null,
+  });
   await AuditLog.create({
     userId: req.session.userId,
     action: `${type}_approved`,
@@ -141,7 +173,7 @@ router.post('/slides/:type/:id/remove', async (req, res) => {
   const Model = type === 'carousel' ? CarouselSlide : GridAd;
   const ad = await Model.findByIdAndUpdate(
     id,
-    { status: 'cancelled' },
+    { status: 'cancelled', inactiveSince: new Date() },
     { new: true },
   );
   await AuditLog.create({
@@ -155,10 +187,94 @@ router.post('/slides/:type/:id/remove', async (req, res) => {
   res.redirect('/secure-admin');
 });
 
+/* ── Delete inactive ad ─────────────────────────────────────────────────────── */
+router.post('/ads/:type/:id/delete', async (req, res) => {
+  const { type, id } = req.params;
+  const Model =
+    type === 'carousel' ? CarouselSlide : type === 'grid' ? GridAd : null;
+  if (!Model) {
+    req.session.flashError = 'Unknown ad type.';
+    return res.redirect('/secure-admin');
+  }
+  const ad = await Model.findById(id);
+  if (!ad) {
+    req.session.flashError = 'Ad not found.';
+    return res.redirect('/secure-admin');
+  }
+  if (!['paused', 'expired', 'cancelled'].includes(ad.status)) {
+    req.session.flashError = 'Only inactive ads can be deleted.';
+    return res.redirect('/secure-admin');
+  }
+
+  // Unlink uploaded files unless another ad still references the same path.
+  const uploadsRoot = path.join(__dirname, '..', 'public');
+  const candidatePaths = [ad.picturePath, ad.picture2Path].filter(
+    (p) => typeof p === 'string' && p.startsWith('/uploads/'),
+  );
+  for (const relPath of candidatePaths) {
+    try {
+      const [carouselRefs, gridRefs] = await Promise.all([
+        CarouselSlide.countDocuments({
+          _id: { $ne: id },
+          $or: [{ picturePath: relPath }, { picture2Path: relPath }],
+        }),
+        GridAd.countDocuments({
+          _id: { $ne: id },
+          $or: [{ picturePath: relPath }, { picture2Path: relPath }],
+        }),
+      ]);
+      if (carouselRefs + gridRefs > 0) {
+        logger.info('Skipping unlink — file still referenced', {
+          file: relPath,
+        });
+        continue;
+      }
+      const absPath = path.join(uploadsRoot, relPath);
+      // Ensure the resolved path stays inside public/uploads.
+      const uploadsDir = path.join(uploadsRoot, 'uploads');
+      if (!absPath.startsWith(uploadsDir + path.sep)) {
+        logger.warn('Refusing to unlink path outside uploads dir', {
+          file: relPath,
+        });
+        continue;
+      }
+      await fs.promises.unlink(absPath);
+      logger.info('Deleted upload', { file: relPath });
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
+        logger.warn('Failed to unlink upload', {
+          file: relPath,
+          err: err.message,
+        });
+      }
+    }
+  }
+
+  await Model.deleteOne({ _id: id });
+  await AuditLog.create({
+    userId: req.session.userId,
+    action: `${type}_deleted_by_admin`,
+    meta: {
+      adId: id,
+      companyName: ad.companyName,
+      status: ad.status,
+      files: candidatePaths,
+    },
+    ip: req.ip,
+  });
+  logger.info('Inactive ad deleted by admin', { type, adId: id });
+  req.session.flashSuccess = 'Ad deleted.';
+  res.redirect('/secure-admin');
+});
+
 /* ── Sidebar ────────────────────────────────────────────────────────────────── */
 router.get('/sidebar', async (req, res) => {
   const items = await SidebarItem.find().sort('order').lean();
-  res.render('admin/sidebar', { title: 'Manage Sidebar', items });
+  const decodedItems = items.map((item) => ({
+    ...item,
+    label: decodeHtmlEntities(item.label),
+  }));
+  res.render('admin/sidebar', { title: 'Manage Sidebar', items: decodedItems });
 });
 
 router.post(
@@ -245,7 +361,37 @@ router.post('/email', bulkEmailRules, handleValidation, async (req, res) => {
 router.get('/test', (req, res) => {
   if (process.env.NODE_ENV !== 'development')
     return res.status(404).render('404', { title: 'Not Found' });
-  res.render('admin/test', { title: 'Dev Test Tools' });
+  const idleMs = req.session.adminIdleTimeout ?? 5 * 60 * 1000;
+  res.render('admin/test', {
+    title: 'Dev Test Tools',
+    adminIdleMinutes: idleMs / 60000,
+  });
+});
+
+router.post('/test/set-idle-timeout', async (req, res) => {
+  if (process.env.NODE_ENV !== 'development')
+    return res.status(404).send('Not found');
+  const mins = parseFloat(req.body.idleMinutes);
+  if (Number.isFinite(mins) && mins > 0) {
+    const nextIdleMs = Math.round(mins * 60 * 1000);
+    req.session.adminIdleTimeout = nextIdleMs;
+    await Customer.findOneAndUpdate(
+      { _id: req.session.userId, role: 'admin' },
+      { adminIdleTimeoutMs: nextIdleMs },
+    );
+    req.session.flashSuccess = `Admin idle timeout set to ${mins} minute(s).`;
+  } else {
+    req.session.flashError = 'Invalid timeout value.';
+  }
+
+  await new Promise((resolve, reject) => {
+    req.session.save((err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
+
+  res.redirect('/secure-admin/test');
 });
 
 router.post('/test/seed', async (req, res) => {

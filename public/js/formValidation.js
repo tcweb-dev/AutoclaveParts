@@ -2,63 +2,6 @@
 
 const form = document.getElementById('adForm');
 
-function cssObjectPosition(value) {
-  const map = {
-    center: 'center center',
-    top: 'center top',
-    bottom: 'center bottom',
-    left: 'left center',
-    right: 'right center',
-    'top-left': 'left top',
-    'top-right': 'right top',
-    'bottom-left': 'left bottom',
-    'bottom-right': 'right bottom',
-  };
-  return map[value] || 'center center';
-}
-
-function objectPositionToPercent(value) {
-  const map = {
-    center: [50, 50],
-    top: [50, 0],
-    bottom: [50, 100],
-    left: [0, 50],
-    right: [100, 50],
-    'top-left': [0, 0],
-    'top-right': [100, 0],
-    'bottom-left': [0, 100],
-    'bottom-right': [100, 100],
-  };
-  return map[value] || [50, 50];
-}
-
-function captionPositionToPercent(value) {
-  const map = {
-    'top-left': [5, 5],
-    'top-center': [30, 5],
-    'top-right': [62, 5],
-    'bottom-left': [5, 68],
-    'bottom-center': [30, 68],
-    'bottom-right': [62, 68],
-  };
-  return map[value] || [5, 5];
-}
-
-function percentToCaptionPosition(xPct, yPct) {
-  const x = xPct < 33 ? 'left' : xPct > 66 ? 'right' : 'center';
-  const y = yPct < 50 ? 'top' : 'bottom';
-  return `${y}-${x}`;
-}
-
-function percentToObjectPosition(xPct, yPct) {
-  const x = xPct < 33 ? 'left' : xPct > 66 ? 'right' : 'center';
-  const y = yPct < 33 ? 'top' : yPct > 66 ? 'bottom' : 'center';
-  if (x === 'center' && y === 'center') return 'center';
-  if (x === 'center') return y;
-  if (y === 'center') return x;
-  return `${y}-${x}`;
-}
-
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
@@ -73,16 +16,16 @@ function setupLivePreview(currentForm) {
   const picture2 = currentForm.querySelector('#picture2');
   const removePicture = currentForm.querySelector('#removePicture');
   const removePicture2 = currentForm.querySelector('#removePicture2');
-  const captionPosition = currentForm.querySelector('#captionPosition');
   const captionPositionXInput = currentForm.querySelector('#captionPositionX');
   const captionPositionYInput = currentForm.querySelector('#captionPositionY');
+  const captionWidthPctInput = currentForm.querySelector('#captionWidthPct');
+  const captionHeightPctInput = currentForm.querySelector('#captionHeightPct');
   const descriptionPositionXInput = currentForm.querySelector(
     '#descriptionPositionX',
   );
   const descriptionPositionYInput = currentForm.querySelector(
     '#descriptionPositionY',
   );
-  const imagePosition = currentForm.querySelector('#imagePosition');
   const imagePositionXInput = currentForm.querySelector('#imagePositionX');
   const imagePositionYInput = currentForm.querySelector('#imagePositionY');
   const picture2PositionXInput =
@@ -133,6 +76,18 @@ function setupLivePreview(currentForm) {
     if (captionPositionYInput) captionPositionYInput.value = y.toFixed(2);
   };
 
+  const applyCaptionWidth = (wPct) => {
+    const w = clamp(wPct, 5, 100);
+    previewCaption.style.width = `${w}%`;
+    if (captionWidthPctInput) captionWidthPctInput.value = w.toFixed(2);
+  };
+
+  const applyCaptionHeight = (hPct) => {
+    const h = clamp(hPct, 10, 100);
+    previewCaption.style.height = `${h}%`;
+    if (captionHeightPctInput) captionHeightPctInput.value = h.toFixed(2);
+  };
+
   const applyPicture2XY = (xPct, yPct) => {
     if (!previewImage2) return;
     const x = clamp(xPct, 0, 100);
@@ -153,6 +108,16 @@ function setupLivePreview(currentForm) {
       descriptionPositionXInput.value = x.toFixed(2);
     if (descriptionPositionYInput)
       descriptionPositionYInput.value = y.toFixed(2);
+  };
+
+  const applyMainImageXY = (xPct, yPct) => {
+    const x = clamp(xPct, 0, 100);
+    const y = clamp(yPct, 0, 100);
+    previewImage.style.setProperty('--preview-x', `${x}%`);
+    previewImage.style.setProperty('--preview-y', `${y}%`);
+    if (imagePositionXInput) imagePositionXInput.value = x.toFixed(2);
+    if (imagePositionYInput) imagePositionYInput.value = y.toFixed(2);
+    return { x, y };
   };
 
   companyName?.addEventListener('input', () => {
@@ -181,18 +146,6 @@ function setupLivePreview(currentForm) {
     previewLinkState.textContent = linkUrl.value.trim()
       ? 'Image click opens your URL'
       : 'No click-through URL set yet';
-  });
-
-  captionPosition?.addEventListener('change', () => {
-    const [xPct, yPct] = captionPositionToPercent(captionPosition.value);
-    applyCaptionXY(xPct, yPct);
-  });
-
-  imagePosition?.addEventListener('change', () => {
-    const [xPct, yPct] = objectPositionToPercent(imagePosition.value);
-    previewImage.style.objectPosition = `${xPct}% ${yPct}%`;
-    if (imagePositionXInput) imagePositionXInput.value = String(xPct);
-    if (imagePositionYInput) imagePositionYInput.value = String(yPct);
   });
 
   imageScale?.addEventListener('input', () => {
@@ -412,24 +365,24 @@ function setupLivePreview(currentForm) {
   if (Number.isFinite(startingCaptionX) && Number.isFinite(startingCaptionY)) {
     applyCaptionXY(startingCaptionX, startingCaptionY);
   } else {
-    const [xPct, yPct] = captionPositionToPercent(
-      captionPosition?.value || 'bottom-left',
-    );
-    applyCaptionXY(xPct, yPct);
+    applyCaptionXY(0, 0);
   }
+  const rawCaptionW = captionWidthPctInput?.value?.trim();
+  const startingCaptionW =
+    rawCaptionW !== '' && rawCaptionW != null ? Number(rawCaptionW) : NaN;
+  applyCaptionWidth(Number.isFinite(startingCaptionW) ? startingCaptionW : 30);
+  const rawCaptionH = captionHeightPctInput?.value?.trim();
+  const startingCaptionH =
+    rawCaptionH !== '' && rawCaptionH != null ? Number(rawCaptionH) : NaN;
+  applyCaptionHeight(Number.isFinite(startingCaptionH) ? startingCaptionH : 30);
   const rawImgX = imagePositionXInput?.value?.trim();
   const rawImgY = imagePositionYInput?.value?.trim();
   const startingX = rawImgX !== '' && rawImgX != null ? Number(rawImgX) : NaN;
   const startingY = rawImgY !== '' && rawImgY != null ? Number(rawImgY) : NaN;
   if (Number.isFinite(startingX) && Number.isFinite(startingY)) {
-    previewImage.style.objectPosition = `${clamp(startingX, 0, 100)}% ${clamp(startingY, 0, 100)}%`;
+    applyMainImageXY(startingX, startingY);
   } else {
-    const [xPct, yPct] = objectPositionToPercent(
-      imagePosition?.value || 'center',
-    );
-    previewImage.style.objectPosition = `${xPct}% ${yPct}%`;
-    if (imagePositionXInput) imagePositionXInput.value = String(xPct);
-    if (imagePositionYInput) imagePositionYInput.value = String(yPct);
+    applyMainImageXY(50, 50);
   }
   previewImage.style.setProperty(
     '--preview-scale',
@@ -485,12 +438,37 @@ function setupLivePreview(currentForm) {
     if (currentSecondImageWrap) currentSecondImageWrap.style.display = 'none';
   }
 
-  // Drag caption panel to quickly choose one of the existing six caption positions.
-  if (previewCanvas && previewCaption && captionPosition) {
+  // Drag caption panel to reposition company info.
+  if (previewCanvas && previewCaption) {
+    const resizeHandle = document.getElementById('captionResizeHandle');
+    const resizeHandleY = document.getElementById('captionResizeHandleY');
     let draggingCaption = false;
+    let resizingCaptionX = false;
+    let resizingCaptionY = false;
+    let resizeStartX = 0;
+    let resizeStartW = 30;
+    let resizeStartY = 0;
+    let resizeStartH = 30;
+
+    const getCaptionWidthPct = () => {
+      const w = parseFloat(captionWidthPctInput?.value);
+      return Number.isFinite(w) ? clamp(w, 5, 100) : 30;
+    };
+
+    const getCaptionHeightPct = () => {
+      const h = parseFloat(captionHeightPctInput?.value);
+      return Number.isFinite(h) ? clamp(h, 10, 100) : 30;
+    };
+
+    const isOnAnyResizeHandle = (target) =>
+      (resizeHandle &&
+        (target === resizeHandle || resizeHandle.contains(target))) ||
+      (resizeHandleY &&
+        (target === resizeHandleY || resizeHandleY.contains(target)));
 
     previewCaption.addEventListener('pointerdown', (event) => {
       if (event.button !== 0) return;
+      if (isOnAnyResizeHandle(event.target)) return;
       draggingCaption = true;
       previewCaption.setPointerCapture(event.pointerId);
       previewCaption.classList.add('is-dragging');
@@ -517,7 +495,6 @@ function setupLivePreview(currentForm) {
         100,
       );
       applyCaptionXY(xPct, yPct);
-      captionPosition.value = percentToCaptionPosition(xPct, yPct);
     };
 
     previewCaption.addEventListener('pointermove', (event) => {
@@ -538,15 +515,100 @@ function setupLivePreview(currentForm) {
 
     previewCaption.addEventListener('pointerup', finishCaptionDrag);
     previewCaption.addEventListener('pointercancel', finishCaptionDrag);
+
+    // Resize handle
+    if (resizeHandle) {
+      resizeHandle.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        resizingCaptionX = true;
+        resizeStartX = event.clientX;
+        resizeStartW = getCaptionWidthPct();
+        resizeHandle.setPointerCapture(event.pointerId);
+        previewCaption.classList.add('is-resizing');
+        event.preventDefault();
+        event.stopPropagation();
+      });
+
+      resizeHandle.addEventListener('pointermove', (event) => {
+        if (!resizingCaptionX) return;
+        const canvasRect = previewCanvas.getBoundingClientRect();
+        const deltaPct =
+          ((event.clientX - resizeStartX) / canvasRect.width) * 100;
+        applyCaptionWidth(resizeStartW + deltaPct);
+      });
+
+      const finishResizeX = (event) => {
+        if (!resizingCaptionX) return;
+        resizingCaptionX = false;
+        previewCaption.classList.remove('is-resizing');
+        try {
+          resizeHandle.releasePointerCapture(event.pointerId);
+        } catch {}
+      };
+      resizeHandle.addEventListener('pointerup', finishResizeX);
+      resizeHandle.addEventListener('pointercancel', finishResizeX);
+    }
+
+    if (resizeHandleY) {
+      resizeHandleY.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        resizingCaptionY = true;
+        resizeStartY = event.clientY;
+        resizeStartH = getCaptionHeightPct();
+        resizeHandleY.setPointerCapture(event.pointerId);
+        previewCaption.classList.add('is-resizing-y');
+        event.preventDefault();
+        event.stopPropagation();
+      });
+
+      resizeHandleY.addEventListener('pointermove', (event) => {
+        if (!resizingCaptionY) return;
+        const canvasRect = previewCanvas.getBoundingClientRect();
+        const deltaPct =
+          ((event.clientY - resizeStartY) / canvasRect.height) * 100;
+        applyCaptionHeight(resizeStartH + deltaPct);
+      });
+
+      const finishResizeY = (event) => {
+        if (!resizingCaptionY) return;
+        resizingCaptionY = false;
+        previewCaption.classList.remove('is-resizing-y');
+        try {
+          resizeHandleY.releasePointerCapture(event.pointerId);
+        } catch {}
+      };
+      resizeHandleY.addEventListener('pointerup', finishResizeY);
+      resizeHandleY.addEventListener('pointercancel', finishResizeY);
+    }
   }
 
-  // Drag image to quickly set image focus and sync back to the existing image position select.
-  if (previewCanvas && previewImage && imagePosition) {
+  // Drag image to set image focus.
+  if (previewCanvas && previewImage) {
     let draggingImage = false;
+    let dragStartClientX = 0;
+    let dragStartClientY = 0;
+    let dragStartImageX = 50;
+    let dragStartImageY = 50;
+
+    const readCurrentImageXY = () => {
+      const x = Number(imagePositionXInput?.value);
+      const y = Number(imagePositionYInput?.value);
+      return [
+        Number.isFinite(x) ? clamp(x, 0, 100) : 50,
+        Number.isFinite(y) ? clamp(y, 0, 100) : 50,
+      ];
+    };
+
+    previewImage.addEventListener('dragstart', (event) => {
+      event.preventDefault();
+    });
 
     previewImage.addEventListener('pointerdown', (event) => {
       if (event.button !== 0) return;
       draggingImage = true;
+      dragStartClientX = event.clientX;
+      dragStartClientY = event.clientY;
+      [dragStartImageX, dragStartImageY] = readCurrentImageXY();
       previewImage.setPointerCapture(event.pointerId);
       previewImage.classList.add('is-dragging');
       event.preventDefault();
@@ -555,19 +617,13 @@ function setupLivePreview(currentForm) {
     previewImage.addEventListener('pointermove', (event) => {
       if (!draggingImage) return;
       const rect = previewCanvas.getBoundingClientRect();
-      const xPct = clamp(
-        ((event.clientX - rect.left) / rect.width) * 100,
-        0,
-        100,
+      const deltaXPct = ((event.clientX - dragStartClientX) / rect.width) * 100;
+      const deltaYPct =
+        ((event.clientY - dragStartClientY) / rect.height) * 100;
+      applyMainImageXY(
+        dragStartImageX + deltaXPct,
+        dragStartImageY + deltaYPct,
       );
-      const yPct = clamp(
-        ((event.clientY - rect.top) / rect.height) * 100,
-        0,
-        100,
-      );
-      previewImage.style.objectPosition = `${xPct}% ${yPct}%`;
-      if (imagePositionXInput) imagePositionXInput.value = xPct.toFixed(2);
-      if (imagePositionYInput) imagePositionYInput.value = yPct.toFixed(2);
     });
 
     const finishImageDrag = (event) => {
@@ -578,22 +634,7 @@ function setupLivePreview(currentForm) {
         previewImage.releasePointerCapture(event.pointerId);
       } catch {}
 
-      const rect = previewCanvas.getBoundingClientRect();
-      const xPct = clamp(
-        ((event.clientX - rect.left) / rect.width) * 100,
-        0,
-        100,
-      );
-      const yPct = clamp(
-        ((event.clientY - rect.top) / rect.height) * 100,
-        0,
-        100,
-      );
-      if (imagePositionXInput) imagePositionXInput.value = xPct.toFixed(2);
-      if (imagePositionYInput) imagePositionYInput.value = yPct.toFixed(2);
-      const keyword = percentToObjectPosition(xPct, yPct);
-      imagePosition.value = keyword;
-      previewImage.style.objectPosition = `${xPct}% ${yPct}%`;
+      applyMainImageXY(...readCurrentImageXY());
     };
 
     previewImage.addEventListener('pointerup', finishImageDrag);

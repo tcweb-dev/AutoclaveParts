@@ -5,6 +5,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import CarouselSlide from '../models/CarouselSlide.js';
 import GridAd from '../models/GridAd.js';
+import Customer from '../models/Customer.js';
 import AuditLog from '../models/AuditLog.js';
 import { requireAuth } from '../middleware/auth.js';
 import { handleUpload } from '../middleware/upload.js';
@@ -12,30 +13,17 @@ import {
   carouselAdRules,
   gridAdRules,
   handleValidation,
+  requirePictureFile,
 } from '../middleware/validate.js';
 import { sendAdminNewSlide } from '../config/mailer.js';
 import { logger } from '../config/logger.js';
+import { renderServerError } from '../utils/renderServerError.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = Router();
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
-}
-
-function mapImagePositionToCoords(position = 'center') {
-  const map = {
-    center: { x: 50, y: 50 },
-    top: { x: 50, y: 0 },
-    bottom: { x: 50, y: 100 },
-    left: { x: 0, y: 50 },
-    right: { x: 100, y: 50 },
-    'top-left': { x: 0, y: 0 },
-    'top-right': { x: 100, y: 0 },
-    'bottom-left': { x: 0, y: 100 },
-    'bottom-right': { x: 100, y: 100 },
-  };
-  return map[position] || map.center;
 }
 
 function getImageCoordsFromBody(body) {
@@ -46,19 +34,7 @@ function getImageCoordsFromBody(body) {
   if (Number.isFinite(x) && Number.isFinite(y)) {
     return { x: clamp(x, 0, 100), y: clamp(y, 0, 100) };
   }
-  return mapImagePositionToCoords(body.imagePosition || 'center');
-}
-
-function mapCaptionPositionToCoords(position = 'bottom-left') {
-  const map = {
-    'top-left': { x: 12, y: 12 },
-    'top-center': { x: 50, y: 12 },
-    'top-right': { x: 88, y: 12 },
-    'bottom-left': { x: 12, y: 88 },
-    'bottom-center': { x: 50, y: 88 },
-    'bottom-right': { x: 88, y: 88 },
-  };
-  return map[position] || map['bottom-left'];
+  return { x: 50, y: 50 };
 }
 
 function getCaptionCoordsFromBody(body) {
@@ -69,7 +45,7 @@ function getCaptionCoordsFromBody(body) {
   if (Number.isFinite(x) && Number.isFinite(y)) {
     return { x: clamp(x, 0, 100), y: clamp(y, 0, 100) };
   }
-  return mapCaptionPositionToCoords(body.captionPosition || 'bottom-left');
+  return { x: 10, y: 88 };
 }
 
 function getSecondImageCoordsFromBody(body) {
@@ -102,18 +78,33 @@ router.get('/', (req, res) => {
 /* ────────────────────────────────────────────────────────────────────────────
    CAROUSEL AD
  ──────────────────────────────────────────────────────────────────────────── */
-router.get('/carousel', requireAuth, (req, res) => {
-  res.render('advertise-form', {
-    title: 'Carousel Ad – $100/month',
-    adType: 'carousel',
-    editMode: false,
-  });
+router.get('/carousel', requireAuth, async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.session.userId).lean();
+    res.render('advertise-form', {
+      title: 'Carousel Ad – $100/month',
+      adType: 'carousel',
+      editMode: false,
+      customer: customer || {},
+    });
+  } catch (err) {
+    logger.error('Fetch customer error in carousel route', {
+      err: err.message,
+    });
+    res.render('advertise-form', {
+      title: 'Carousel Ad – $100/month',
+      adType: 'carousel',
+      editMode: false,
+      customer: {},
+    });
+  }
 });
 
 router.post(
   '/carousel',
   requireAuth,
   handleUpload,
+  requirePictureFile,
   carouselAdRules,
   handleValidation,
   async (req, res) => {
@@ -124,13 +115,10 @@ router.post(
         companyPhone,
         companyDescription,
         linkUrl,
-        captionPosition,
-        imagePosition,
         imageScale,
         picture2Scale,
         fillFrameCrop,
         animationEnabled,
-        autoRenew,
         captionFontColor,
         captionFontSize,
         captionFontWeight,
@@ -139,6 +127,9 @@ router.post(
         descriptionFontWeight,
         descriptionBgColor,
         slideBgColor,
+        captionWidthPct,
+        captionHeightPct,
+        maxChargeLimit,
       } = req.body;
       const { x: imagePositionX, y: imagePositionY } = getImageCoordsFromBody(
         req.body,
@@ -161,18 +152,23 @@ router.post(
         picture2PositionY,
         picture2Scale: Number(picture2Scale) || 100,
         linkUrl: linkUrl || '',
-        captionPosition: captionPosition || 'top-left',
         captionPositionX,
         captionPositionY,
+        captionWidthPct: Math.min(
+          100,
+          Math.max(5, Number(captionWidthPct) || 30),
+        ),
+        captionHeightPct: Math.min(
+          100,
+          Math.max(10, Number(captionHeightPct) || 30),
+        ),
         descriptionPositionX,
         descriptionPositionY,
-        imagePosition: imagePosition || 'center',
         imagePositionX,
         imagePositionY,
         imageScale: Number(imageScale) || 100,
         imageFitMode: fillFrameCrop === 'on' ? 'cover' : 'contain',
         animationEnabled: animationEnabled === 'on',
-        autoRenew: autoRenew === 'on',
         captionFontColor: captionFontColor || '#ffffff',
         captionFontSize: Number(captionFontSize) || 16,
         captionFontWeight: captionFontWeight || '600',
@@ -182,14 +178,14 @@ router.post(
         descriptionBgColor: descriptionBgColor || '#000000',
         slideBgColor: slideBgColor || '',
         status: 'pending',
+        maxChargeLimit:
+          maxChargeLimit !== undefined && maxChargeLimit !== ''
+            ? Number(maxChargeLimit)
+            : null,
       });
       await AuditLog.create({
         userId: req.session.userId,
         action: 'carousel_ad_submitted',
-        meta: { slideId: slide._id, companyName },
-        ip: req.ip,
-      });
-      await sendAdminNewSlide({
         type: 'carousel',
         companyName,
         customerId: req.session.userId,
@@ -198,7 +194,7 @@ router.post(
       res.redirect(`/payment/carousel/${slide._id}`);
     } catch (err) {
       logger.error('Carousel ad submit error', { err: err.message });
-      res.status(500).render('500', { title: 'Server Error' });
+      renderServerError(req, res, err);
     }
   },
 );
@@ -206,18 +202,31 @@ router.post(
 /* ────────────────────────────────────────────────────────────────────────────
    GRID AD
  ──────────────────────────────────────────────────────────────────────────── */
-router.get('/grid', requireAuth, (req, res) => {
-  res.render('advertise-form', {
-    title: 'Grid Ad – $50/month',
-    adType: 'grid',
-    editMode: false,
-  });
+router.get('/grid', requireAuth, async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.session.userId).lean();
+    res.render('advertise-form', {
+      title: 'Company / Contact Information',
+      adType: 'grid',
+      editMode: false,
+      customer: customer || {},
+    });
+  } catch (err) {
+    logger.error('Fetch customer error in grid route', { err: err.message });
+    res.render('advertise-form', {
+      title: 'Company / Contact Information',
+      adType: 'grid',
+      editMode: false,
+      customer: {},
+    });
+  }
 });
 
 router.post(
   '/grid',
   requireAuth,
   handleUpload,
+  requirePictureFile,
   gridAdRules,
   handleValidation,
   async (req, res) => {
@@ -228,13 +237,10 @@ router.post(
         companyPhone,
         companyDescription,
         linkUrl,
-        captionPosition,
-        imagePosition,
         imageScale,
         picture2Scale,
         fillFrameCrop,
         animationEnabled,
-        autoRenew,
         captionFontColor,
         captionFontSize,
         captionFontWeight,
@@ -243,6 +249,9 @@ router.post(
         descriptionFontWeight,
         descriptionBgColor,
         slideBgColor,
+        captionWidthPct,
+        captionHeightPct,
+        maxChargeLimit,
       } = req.body;
       const { x: imagePositionX, y: imagePositionY } = getImageCoordsFromBody(
         req.body,
@@ -265,18 +274,23 @@ router.post(
         picture2PositionY,
         picture2Scale: Number(picture2Scale) || 100,
         linkUrl: linkUrl || '',
-        captionPosition: captionPosition || 'top-left',
         captionPositionX,
         captionPositionY,
+        captionWidthPct: Math.min(
+          100,
+          Math.max(5, Number(captionWidthPct) || 30),
+        ),
+        captionHeightPct: Math.min(
+          100,
+          Math.max(10, Number(captionHeightPct) || 30),
+        ),
         descriptionPositionX,
         descriptionPositionY,
-        imagePosition: imagePosition || 'center',
         imagePositionX,
         imagePositionY,
         imageScale: Number(imageScale) || 100,
         imageFitMode: fillFrameCrop === 'on' ? 'cover' : 'contain',
         animationEnabled: animationEnabled === 'on',
-        autoRenew: autoRenew === 'on',
         captionFontColor: captionFontColor || '#ffffff',
         captionFontSize: Number(captionFontSize) || 16,
         captionFontWeight: captionFontWeight || '600',
@@ -286,6 +300,10 @@ router.post(
         descriptionBgColor: descriptionBgColor || '#000000',
         slideBgColor: slideBgColor || '',
         status: 'pending',
+        maxChargeLimit:
+          maxChargeLimit !== undefined && maxChargeLimit !== ''
+            ? Number(maxChargeLimit)
+            : null,
       });
       await AuditLog.create({
         userId: req.session.userId,
@@ -302,7 +320,7 @@ router.post(
       res.redirect(`/payment/grid/${ad._id}`);
     } catch (err) {
       logger.error('Grid ad submit error', { err: err.message });
-      res.status(500).render('500', { title: 'Server Error' });
+      renderServerError(req, res, err);
     }
   },
 );

@@ -1,6 +1,39 @@
 'use strict';
 import { body, validationResult } from 'express-validator';
 
+export function requirePictureFile(req, res, next) {
+  // Check if this is an edit (ad exists) with removePicture not checked, or new ad without file
+  const isEdit = req.body.ad_id || req.originalUrl.includes('/edit/');
+  const isRemoving = req.body.removePicture === 'on';
+
+  if (!isEdit && !req.file) {
+    // New ad requires primary picture
+    const errors = {
+      array: () => [{ param: 'picture', msg: 'Primary picture is required' }],
+    };
+    req.session.validationErrors = errors.array();
+    req.session.oldInput = req.body;
+    return res.redirect(req.originalUrl || '/');
+  }
+
+  if (isEdit && isRemoving && !req.file) {
+    // Editing and removing picture requires a replacement
+    const errors = {
+      array: () => [
+        {
+          param: 'picture',
+          msg: 'A new picture is required when removing the current one',
+        },
+      ],
+    };
+    req.session.validationErrors = errors.array();
+    req.session.oldInput = req.body;
+    return res.redirect(req.originalUrl || '/');
+  }
+
+  next();
+}
+
 export function handleValidation(req, res, next) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -41,7 +74,8 @@ export const registerRules = [
     .escape(),
   body('companyName')
     .trim()
-    .optional({ checkFalsy: true })
+    .notEmpty()
+    .withMessage('Company name is required')
     .isLength({ max: 120 })
     .escape(),
   body('companyWebsite')
@@ -103,33 +137,6 @@ const commonAdRules = [
       'Click-through URL must be a full URL (e.g. https://yoursite.com)',
     )
     .isLength({ max: 255 }),
-  body('captionPosition')
-    .trim()
-    .optional({ checkFalsy: true })
-    .isIn([
-      'top-left',
-      'top-center',
-      'top-right',
-      'bottom-left',
-      'bottom-center',
-      'bottom-right',
-    ])
-    .withMessage('Invalid caption position'),
-  body('imagePosition')
-    .trim()
-    .optional({ checkFalsy: true })
-    .isIn([
-      'center',
-      'top',
-      'bottom',
-      'left',
-      'right',
-      'top-left',
-      'top-right',
-      'bottom-left',
-      'bottom-right',
-    ])
-    .withMessage('Invalid image position'),
   body('imageScale')
     .optional({ checkFalsy: true })
     .isInt({ min: 20, max: 160 })
@@ -204,7 +211,10 @@ const commonAdRules = [
     .withMessage('Background color must be a valid hex color'),
   body('fillFrameCrop').optional({ checkFalsy: true }).equals('on'),
   body('animationEnabled').optional({ checkFalsy: true }).equals('on'),
-  body('autoRenew').optional({ checkFalsy: true }).equals('on'),
+  body('maxChargeLimit')
+    .optional({ checkFalsy: true })
+    .isFloat({ min: 0, max: 1000000 })
+    .withMessage('Maximum charge limit must be a valid amount'),
   body('removePicture').optional({ checkFalsy: true }).equals('on'),
   body('removePicture2').optional({ checkFalsy: true }).equals('on'),
 ];
@@ -214,7 +224,7 @@ export const gridAdRules = commonAdRules;
 
 /* ── Sidebar ────────────────────────────────────────────────────────────────── */
 export const sidebarItemRules = [
-  body('label').trim().notEmpty().isLength({ max: 100 }).escape(),
+  body('label').trim().notEmpty().isLength({ max: 100 }),
   body('hrefUrl')
     .trim()
     .optional({ checkFalsy: true })

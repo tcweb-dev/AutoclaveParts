@@ -11,22 +11,28 @@
               src="<%= slide.picturePath %>"
               alt="<%= slide.companyName %> advertisement"
               class="slide-img<%= slide.animationEnabled ? ' slide-animate' : '' %>"
-              style="object-position: <%= (
-                (typeof slide.imagePositionX === 'number' && typeof slide.imagePositionY === 'number')
-                  ? (slide.imagePositionX + '% ' + slide.imagePositionY + '%')
-                  : (
-                    slide.imagePosition === 'top' ? 'center top' :
-                    slide.imagePosition === 'bottom' ? 'center bottom' :
-                    slide.imagePosition === 'left' ? 'left center' :
-                    slide.imagePosition === 'right' ? 'right center' :
-                    slide.imagePosition === 'top-left' ? 'left top' :
-                    slide.imagePosition === 'top-right' ? 'right top' :
-                    slide.imagePosition === 'bottom-left' ? 'left bottom' :
-                    slide.imagePosition === 'bottom-right' ? 'right bottom' :
-                    'center center'
-                  )
-              ) %>; --img-scale: <%= (((slide.imageScale || 100) / 100).toFixed(2)) %>; --img-fit: <%= slide.imageFitMode === 'cover' ? 'cover' : 'contain' %>;"
-              loading="lazy"
+              style="--img-x: <%= (typeof slide.imagePositionX === 'number')
+                ? slide.imagePositionX
+                : (
+                  slide.imagePosition === 'left' ? 0 :
+                  slide.imagePosition === 'right' ? 100 :
+                  slide.imagePosition === 'top-left' ? 0 :
+                  slide.imagePosition === 'top-right' ? 100 :
+                  slide.imagePosition === 'bottom-left' ? 0 :
+                  slide.imagePosition === 'bottom-right' ? 100 :
+                  50
+                ) %>%; --img-y: <%= (typeof slide.imagePositionY === 'number')
+                ? slide.imagePositionY
+                : (
+                  slide.imagePosition === 'top' ? 0 :
+                  slide.imagePosition === 'bottom' ? 100 :
+                  slide.imagePosition === 'top-left' ? 0 :
+                  slide.imagePosition === 'top-right' ? 0 :
+                  slide.imagePosition === 'bottom-left' ? 100 :
+                  slide.imagePosition === 'bottom-right' ? 100 :
+                  50
+                ) %>%; --img-scale: <%= (((slide.imageScale || 100) / 100).toFixed(2)) %>; --img-fit: <%= slide.imageFitMode === 'cover' ? 'cover' : 'contain' %>;"
+              loading="eager"
             />
             <% if (slide.picture2Path) { %>
               <img
@@ -34,7 +40,7 @@
                 alt="<%= slide.companyName %> secondary advertisement image"
                 class="slide-img-secondary"
                 style="--img2-x: <%= (typeof slide.picture2PositionX === 'number' ? slide.picture2PositionX : 72) %>%; --img2-y: <%= (typeof slide.picture2PositionY === 'number' ? slide.picture2PositionY : 72) %>%; --img2-scale: <%= (((slide.picture2Scale || 100) / 100).toFixed(2)) %>;"
-                loading="lazy"
+                loading="eager"
               />
             <% } %>
             <% if (slide.linkUrl) { %></a><% } %>

@@ -78,12 +78,12 @@
                   <li>
                     <span class="admin-ad-badge admin-ad-badge--<%= ad.type.toLowerCase() %>"><%= ad.type %></span>
                     <% if (ad.picturePath) { %>
-                      <a href="<%= ad.picturePath %>" target="_blank" rel="noopener noreferrer" class="admin-ad-mini-link" data-lightbox-thumb="true" aria-label="Preview <%= ad.type %> main image">
+                      <a href="<%= ad.picturePath %>" target="_blank" rel="noopener noreferrer" class="admin-ad-mini-link" aria-label="Open <%= ad.type %> main image in a new tab">
                         <img src="<%= ad.picturePath %>" alt="<%= ad.type %> ad thumbnail" class="admin-ad-mini-thumb" />
                       </a>
                     <% } %>
                     <% if (ad.picture2Path) { %>
-                      <a href="<%= ad.picture2Path %>" target="_blank" rel="noopener noreferrer" class="admin-ad-mini-link" data-lightbox-thumb="true" aria-label="Preview <%= ad.type %> second image">
+                      <a href="<%= ad.picture2Path %>" target="_blank" rel="noopener noreferrer" class="admin-ad-mini-link" aria-label="Open <%= ad.type %> second image in a new tab">
                         <img src="<%= ad.picture2Path %>" alt="<%= ad.type %> second thumbnail" class="admin-ad-mini-thumb" />
                       </a>
                     <% } %>
@@ -99,70 +99,5 @@
     </tbody>
   </table>
 </section>
-
-<section class="admin-section">
-  <h2>Inactive Ads (<%= inactiveAds.length %>)</h2>
-  <% if (inactiveAds.length === 0) { %>
-    <p>No inactive ads.</p>
-  <% } else { %>
-    <table class="admin-table">
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Company</th>
-          <th>Customer</th>
-          <th>Status</th>
-          <th>Inactive Since</th>
-          <th>Inactive For</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% inactiveAds.forEach(ad => { %>
-          <%
-            const sinceRaw = ad.inactiveSince || ad.updatedAt;
-            const since = sinceRaw ? new Date(sinceRaw) : null;
-            const days = since ? Math.floor((Date.now() - since.getTime()) / (24 * 60 * 60 * 1000)) : null;
-            const cust = ad.customerId && typeof ad.customerId === 'object' ? ad.customerId : null;
-          %>
-          <tr>
-            <td>
-              <span class="admin-ad-badge admin-ad-badge--<%= ad.type %>"><%= ad.type.charAt(0).toUpperCase() + ad.type.slice(1) %></span>
-            </td>
-            <td><%= ad.companyName || '–' %></td>
-            <td>
-              <% if (cust) { %>
-                <%= cust.firstName %> <%= cust.lastName %><br>
-                <small><%= cust.email %></small>
-              <% } else { %>–<% } %>
-            </td>
-            <td><span class="badge badge-<%= ad.status %>"><%= ad.status %></span></td>
-            <td><%= since ? since.toLocaleDateString() : '–' %></td>
-            <td><%= days != null ? (days + ' day' + (days === 1 ? '' : 's')) : '–' %></td>
-            <td>
-              <form method="POST" action="/secure-admin/ads/<%= ad.type %>/<%= ad._id %>/delete" style="display:inline" onsubmit="return confirm('Permanently delete this ad? This cannot be undone.');">
-                <button class="btn btn-sm btn-danger" type="submit">Delete</button>
-              </form>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-  <% } %>
-</section>
-
-<div class="admin-lightbox" id="adminLightbox" hidden aria-hidden="true">
-  <button
-    type="button"
-    class="admin-lightbox-backdrop"
-    id="adminLightboxBackdrop"
-    aria-label="Close image preview"
-  ></button>
-  <figure class="admin-lightbox-content" role="dialog" aria-modal="true" aria-label="Image preview dialog">
-    <button type="button" class="admin-lightbox-close" id="adminLightboxClose" aria-label="Close image preview">&times;</button>
-    <img id="adminLightboxImage" src="" alt="Expanded ad image preview" />
-  </figure>
-</div>
-<script src="/js/adminLightbox.js" defer></script>
 
 <%- include('foot') %>

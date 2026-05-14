@@ -1,5 +1,72 @@
 'use strict';
 
+function getViewportWidth() {
+  return (
+    document.documentElement.clientWidth ||
+    window.innerWidth ||
+    screen.availWidth
+  );
+}
+
+function sizeMainCarousel() {
+  const carousel = document.getElementById('mainCarousel');
+  const wrapper = carousel?.closest('.carousel-wrapper');
+  if (!wrapper) return;
+
+  const viewportWidth = getViewportWidth();
+  const sidePadding = 24;
+
+  // Target about 50% of viewport on desktop, but keep mobile readable.
+  let nextWidth = viewportWidth * 0.5;
+
+  if (viewportWidth <= 900) {
+    nextWidth = viewportWidth - sidePadding;
+  }
+
+  const maxWidth = Math.min(1400, viewportWidth - sidePadding);
+  const minWidth = Math.min(360, maxWidth);
+  const clampedWidth = Math.max(minWidth, Math.min(nextWidth, maxWidth));
+
+  wrapper.style.width = `${Math.round(clampedWidth)}px`;
+}
+
+function parsePercentVar(value, fallback = 50) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function getEdgeThreshold(viewportWidth) {
+  // Conservative around tablet widths, permissive on large desktops.
+  return viewportWidth <= 980 ? 12 : 6;
+}
+
+function isNearEdge(value, edgeThreshold = 8) {
+  return value <= edgeThreshold || value >= 100 - edgeThreshold;
+}
+
+function shouldDisableSlideAnimation(img, viewportWidth) {
+  const x = parsePercentVar(img.style.getPropertyValue('--img-x'), 50);
+  const y = parsePercentVar(img.style.getPropertyValue('--img-y'), 50);
+  const edgeThreshold = getEdgeThreshold(viewportWidth);
+
+  // Tiny screens and edge-anchored images are most likely to clip during float.
+  return (
+    viewportWidth <= 700 ||
+    isNearEdge(x, edgeThreshold) ||
+    isNearEdge(y, edgeThreshold)
+  );
+}
+
+function applyCarouselAnimationGuards() {
+  const viewportWidth = getViewportWidth();
+  document.querySelectorAll('.slide-img.slide-animate').forEach((img) => {
+    img.classList.toggle(
+      'slide-animate-disabled',
+      shouldDisableSlideAnimation(img, viewportWidth),
+    );
+  });
+}
+
 class Carousel {
   #el;
   #track;
@@ -65,5 +132,13 @@ class Carousel {
     clearInterval(this.#timer);
   }
 }
+
+sizeMainCarousel();
+applyCarouselAnimationGuards();
+
+window.addEventListener('resize', () => {
+  sizeMainCarousel();
+  applyCarouselAnimationGuards();
+});
 
 document.querySelectorAll('.carousel').forEach((el) => new Carousel(el));

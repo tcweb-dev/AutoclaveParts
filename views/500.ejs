@@ -1,3 +1,40 @@
 <%- include('partials/head-open', { slides: [] }) %>
-<main class="page-main"><div class="container"><h1>500 – Server Error</h1><p>Something went wrong. Please try again later.</p><p><a href="/">Go back home</a></p></div></main>
+<main class="page-main">
+	<div class="container">
+		<h1>500 - Server Error</h1>
+		<p>
+			<%= errorSummary || 'Something went wrong while processing your request.' %>
+		</p>
+		<p>
+			You can try refreshing this page in a few moments. If this keeps happening,
+			contact support and share the reference details below.
+		</p>
+
+		<section aria-label="Error reference details">
+			<h2>Error Reference</h2>
+			<ul>
+				<li>
+					<strong>Reference ID:</strong>
+					<%= requestId || 'Unavailable' %>
+				</li>
+				<li>
+					<strong>Request:</strong>
+					<%= requestMethod || 'UNKNOWN' %> <%= requestPath || '/' %>
+				</li>
+				<li>
+					<strong>Time (UTC):</strong>
+					<%= requestTimeUtc || 'Unavailable' %>
+				</li>
+				<% if (errorCode) { %>
+					<li>
+						<strong>Error Type:</strong>
+						<%= errorCode %>
+					</li>
+				<% } %>
+			</ul>
+		</section>
+
+		<p><a href="/">Go back home</a></p>
+	</div>
+</main>
 <%- include('partials/foot-close') %>

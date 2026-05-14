@@ -12,6 +12,7 @@ import {
   carouselAdRules,
   gridAdRules,
   handleValidation,
+  requirePictureFile,
 } from '../middleware/validate.js';
 import { sendAdminNewSlide } from '../config/mailer.js';
 import { logger } from '../config/logger.js';
@@ -23,21 +24,6 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function mapImagePositionToCoords(position = 'center') {
-  const map = {
-    center: { x: 50, y: 50 },
-    top: { x: 50, y: 0 },
-    bottom: { x: 50, y: 100 },
-    left: { x: 0, y: 50 },
-    right: { x: 100, y: 50 },
-    'top-left': { x: 0, y: 0 },
-    'top-right': { x: 100, y: 0 },
-    'bottom-left': { x: 0, y: 100 },
-    'bottom-right': { x: 100, y: 100 },
-  };
-  return map[position] || map.center;
-}
-
 function getImageCoordsFromBody(body) {
   const rawX = body.imagePositionX;
   const rawY = body.imagePositionY;
@@ -46,19 +32,7 @@ function getImageCoordsFromBody(body) {
   if (Number.isFinite(x) && Number.isFinite(y)) {
     return { x: clamp(x, 0, 100), y: clamp(y, 0, 100) };
   }
-  return mapImagePositionToCoords(body.imagePosition || 'center');
-}
-
-function mapCaptionPositionToCoords(position = 'bottom-left') {
-  const map = {
-    'top-left': { x: 12, y: 12 },
-    'top-center': { x: 50, y: 12 },
-    'top-right': { x: 88, y: 12 },
-    'bottom-left': { x: 12, y: 88 },
-    'bottom-center': { x: 50, y: 88 },
-    'bottom-right': { x: 88, y: 88 },
-  };
-  return map[position] || map['bottom-left'];
+  return { x: 50, y: 50 };
 }
 
 function getCaptionCoordsFromBody(body) {
@@ -69,7 +43,7 @@ function getCaptionCoordsFromBody(body) {
   if (Number.isFinite(x) && Number.isFinite(y)) {
     return { x: clamp(x, 0, 100), y: clamp(y, 0, 100) };
   }
-  return mapCaptionPositionToCoords(body.captionPosition || 'bottom-left');
+  return { x: 10, y: 88 };
 }
 
 function getSecondImageCoordsFromBody(body) {
@@ -107,7 +81,7 @@ function deleteOldFile(picturePath) {
 }
 
 /* ── Dashboard home ─────────────────────────────────────────────────────────── */
-router.get('/', async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   const [carouselAds, gridAds] = await Promise.all([
     CarouselSlide.find({ customerId: req.session.userId })
       .sort('-createdAt')
@@ -131,6 +105,7 @@ router.post('/cancel/:type/:id', async (req, res) => {
     return res.redirect('/dashboard');
   }
   ad.status = 'cancelled';
+  ad.inactiveSince = new Date();
   await ad.save();
   await AuditLog.create({
     userId: req.session.userId,
@@ -145,23 +120,26 @@ router.post('/cancel/:type/:id', async (req, res) => {
 });
 
 /* ── Edit carousel ──────────────────────────────────────────────────────────── */
-router.get('/edit/carousel/:id', async (req, res) => {
+router.get('/edit/carousel/:id', requireAuth, async (req, res) => {
   const ad = await CarouselSlide.findOne({
     _id: req.params.id,
     customerId: req.session.userId,
   }).lean();
   if (!ad) return res.status(404).render('404', { title: 'Not Found' });
   res.render('advertise-form', {
-    title: 'Edit Carousel Ad',
+    title: 'Edit Ad Displayed Information',
     adType: 'carousel',
     ad,
+    customer: {},
     editMode: true,
   });
 });
 
 router.post(
   '/edit/carousel/:id',
+  requireAuth,
   handleUpload,
+  requirePictureFile,
   carouselAdRules,
   handleValidation,
   async (req, res) => {
@@ -178,13 +156,11 @@ router.post(
       removePicture,
       removePicture2,
       linkUrl,
-      captionPosition,
-      imagePosition,
       imageScale,
       picture2Scale,
       fillFrameCrop,
       animationEnabled,
-      autoRenew,
+      maxChargeLimit,
       captionFontColor,
       captionFontSize,
       captionFontWeight,
@@ -208,18 +184,27 @@ router.post(
     ad.companyPhone = companyPhone || '';
     ad.companyDescription = companyDescription || '';
     ad.linkUrl = linkUrl || '';
-    ad.captionPosition = captionPosition || 'bottom-left';
     ad.captionPositionX = captionPositionX;
     ad.captionPositionY = captionPositionY;
+    ad.captionWidthPct = Math.min(
+      100,
+      Math.max(5, Number(req.body.captionWidthPct) || 30),
+    );
+    ad.captionHeightPct = Math.min(
+      100,
+      Math.max(10, Number(req.body.captionHeightPct) || 30),
+    );
     ad.descriptionPositionX = descriptionPositionX;
     ad.descriptionPositionY = descriptionPositionY;
-    ad.imagePosition = imagePosition || 'center';
     ad.imagePositionX = imagePositionX;
     ad.imagePositionY = imagePositionY;
     ad.imageScale = Number(imageScale) || 100;
     ad.imageFitMode = fillFrameCrop === 'on' ? 'cover' : 'contain';
     ad.animationEnabled = animationEnabled === 'on';
-    ad.autoRenew = autoRenew === 'on';
+    ad.maxChargeLimit =
+      maxChargeLimit !== undefined && maxChargeLimit !== ''
+        ? Number(maxChargeLimit)
+        : null;
     ad.captionFontColor = captionFontColor || '#ffffff';
     ad.captionFontSize = Number(captionFontSize) || 16;
     ad.captionFontWeight = captionFontWeight || '600';
@@ -239,6 +224,12 @@ router.post(
 
     if (req.file) {
       nextPicturePath = `/uploads/${req.file.filename}`;
+      console.log(
+        'DEBUG: After req.file check - nextPicturePath =',
+        nextPicturePath,
+        'req.file =',
+        req.file ? 'EXISTS' : 'NONE',
+      );
     }
     if (req.file2) {
       nextPicture2Path = `/uploads/${req.file2.filename}`;
@@ -246,6 +237,12 @@ router.post(
 
     if (removePicture === 'on' && !req.file) {
       nextPicturePath = '';
+      console.log(
+        'DEBUG: After removePicture check - nextPicturePath =',
+        nextPicturePath,
+        'removePicture =',
+        removePicture,
+      );
     }
     if (removePicture2 === 'on' && !req.file2) {
       nextPicture2Path = '';
@@ -267,6 +264,12 @@ router.post(
 
     ad.picturePath = nextPicturePath;
     ad.picture2Path = nextPicture2Path;
+    console.log(
+      'DEBUG: Before save - ad.picturePath =',
+      ad.picturePath,
+      'ad.picture2Path =',
+      ad.picture2Path,
+    );
 
     if (
       oldPicturePath &&
@@ -303,7 +306,7 @@ router.post(
 );
 
 /* ── Edit grid ──────────────────────────────────────────────────────────────── */
-router.get('/edit/grid/:id', async (req, res) => {
+router.get('/edit/grid/:id', requireAuth, async (req, res) => {
   const ad = await GridAd.findOne({
     _id: req.params.id,
     customerId: req.session.userId,
@@ -313,13 +316,16 @@ router.get('/edit/grid/:id', async (req, res) => {
     title: 'Edit Grid Ad',
     adType: 'grid',
     ad,
+    customer: {},
     editMode: true,
   });
 });
 
 router.post(
   '/edit/grid/:id',
+  requireAuth,
   handleUpload,
+  requirePictureFile,
   gridAdRules,
   handleValidation,
   async (req, res) => {
@@ -336,13 +342,11 @@ router.post(
       removePicture,
       removePicture2,
       linkUrl,
-      captionPosition,
-      imagePosition,
       imageScale,
       picture2Scale,
       fillFrameCrop,
       animationEnabled,
-      autoRenew,
+      maxChargeLimit,
       captionFontColor,
       captionFontSize,
       captionFontWeight,
@@ -366,26 +370,23 @@ router.post(
     ad.companyPhone = companyPhone || '';
     ad.companyDescription = companyDescription || '';
     ad.linkUrl = linkUrl || '';
-    ad.captionPosition = captionPosition || 'bottom-left';
     ad.captionPositionX = captionPositionX;
     ad.captionPositionY = captionPositionY;
+    ad.captionWidthPct = Math.min(
+      100,
+      Math.max(5, Number(req.body.captionWidthPct) || 30),
+    );
+    ad.captionHeightPct = Math.min(
+      100,
+      Math.max(10, Number(req.body.captionHeightPct) || 30),
+    );
     ad.descriptionPositionX = descriptionPositionX;
-    ad.descriptionPositionY = descriptionPositionY;
-    ad.imagePosition = imagePosition || 'center';
-    ad.imagePositionX = imagePositionX;
-    ad.imagePositionY = imagePositionY;
-    ad.imageScale = Number(imageScale) || 100;
-    ad.imageFitMode = fillFrameCrop === 'on' ? 'cover' : 'contain';
-    ad.animationEnabled = animationEnabled === 'on';
-    ad.autoRenew = autoRenew === 'on';
-    ad.captionFontColor = captionFontColor || '#ffffff';
-    ad.captionFontSize = Number(captionFontSize) || 16;
-    ad.captionFontWeight = captionFontWeight || '600';
-    ad.descriptionFontColor = descriptionFontColor || '#ffffff';
-    ad.descriptionFontSize = Number(descriptionFontSize) || 14;
-    ad.descriptionFontWeight = descriptionFontWeight || '400';
     ad.descriptionBgColor = descriptionBgColor || '#000000';
     ad.slideBgColor = slideBgColor || '';
+    ad.maxChargeLimit =
+      maxChargeLimit !== undefined && maxChargeLimit !== ''
+        ? Number(maxChargeLimit)
+        : null;
     ad.picture2PositionX = picture2PositionX;
     ad.picture2PositionY = picture2PositionY;
     ad.picture2Scale = Number(picture2Scale) || 100;

@@ -31,6 +31,8 @@ const customerSchema = new Schema(
     picture3: { type: String, default: null },
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date },
+    adminIdleTimeoutMs: { type: Number, min: 1000, default: null },
+    stripeCustomerId: { type: String, default: '' },
   },
   { timestamps: true },
 );

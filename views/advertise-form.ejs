@@ -17,28 +17,28 @@
           <div class="form-group">
             <label for="companyName">Company Name <span class="required">*</span></label>
             <input type="text" id="companyName" name="companyName"
-              value="<%= (typeof ad !== 'undefined' && ad.companyName) ? ad.companyName : (oldInput.companyName || '') %>"
+              value="<%= (typeof ad !== 'undefined' && ad.companyName) ? ad.companyName : (oldInput.companyName || customer?.companyName || '') %>"
               required maxlength="120" />
           </div>
 
           <div class="form-group">
             <label for="companyWebsite">Company Website</label>
             <input type="url" id="companyWebsite" name="companyWebsite"
-              value="<%= (typeof ad !== 'undefined' && ad.companyWebsite) ? ad.companyWebsite : (oldInput.companyWebsite || '') %>"
+              value="<%= (typeof ad !== 'undefined' && ad.companyWebsite) ? ad.companyWebsite : (oldInput.companyWebsite || customer?.companyWebsite || '') %>"
               maxlength="255" placeholder="https://yourcompany.com" />
           </div>
 
           <div class="form-group">
             <label for="companyPhone">Company Phone</label>
             <input type="tel" id="companyPhone" name="companyPhone"
-              value="<%= (typeof ad !== 'undefined' && ad.companyPhone) ? ad.companyPhone : (oldInput.companyPhone || '') %>"
+              value="<%= (typeof ad !== 'undefined' && ad.companyPhone) ? ad.companyPhone : (oldInput.companyPhone || customer?.phone || '') %>"
               maxlength="30" />
           </div>
 
           <div class="form-group">
             <label for="linkUrl">Click-through URL <small>(customer's website – fires on picture click)</small></label>
             <input type="url" id="linkUrl" name="linkUrl"
-              value="<%= (typeof ad !== 'undefined' && ad.linkUrl) ? ad.linkUrl : (oldInput.linkUrl || '') %>"
+              value="<%= (typeof ad !== 'undefined' && ad.linkUrl) ? ad.linkUrl : (oldInput.linkUrl || customer?.companyWebsite || '') %>"
               maxlength="255" placeholder="https://yoursite.com" />
             <small class="field-hint">If left blank, your slide image is shown without a clickable link.</small>
           </div>
@@ -50,16 +50,22 @@
           </div>
 
           <fieldset class="form-fieldset">
-            <legend>Billing</legend>
-            <div class="form-check">
-              <input type="radio" id="autoRenewNo" name="autoRenew" value="" <%= ((typeof ad !== 'undefined' && !ad.autoRenew) || (typeof ad === 'undefined' && oldInput.autoRenew !== 'on')) ? 'checked' : '' %> />
-              <label for="autoRenewNo">30 days only – I will renew manually</label>
+            <legend>Pay Per View, $4.00 per 1,000 impressions. ($4.00 CPM)</legend>
+            <div class="form-group">
+              <label for="maxChargeLimit">Maximum charge limit for 30 days</label>
+              <input
+                type="number"
+                id="maxChargeLimit"
+                name="maxChargeLimit"
+                min="0"
+                step="0.01"
+                inputmode="decimal"
+                value="<%= (typeof ad !== 'undefined' && ad.maxChargeLimit != null) ? ad.maxChargeLimit : (oldInput.maxChargeLimit || '') %>"
+                placeholder="100.00"
+              />
+              <small class="field-hint">Optional cap in dollars for the 30-day billing period.</small>
             </div>
-            <div class="form-check">
-              <input type="radio" id="autoRenewYes" name="autoRenew" value="on" <%= ((typeof ad !== 'undefined' && ad.autoRenew) || (typeof ad === 'undefined' && oldInput.autoRenew === 'on')) ? 'checked' : '' %> />
-              <label for="autoRenewYes">Auto-renew – my card will be charged automatically on the expiration date</label>
-            </div>
-            <p class="form-note"><strong>Note:</strong> Ads expire on the same day of the following month. No refunds are issued for the remaining portion of any period.</p>
+            <p class="form-note"><strong>Note:</strong> Ads are billed at $4.00 per 1,000 impressions. No refunds are issued for unused impressions or remaining time.</p>
           </fieldset>
 
         </div>
@@ -80,35 +86,12 @@
                 <% const selectedDescriptionFontWeight = (typeof ad !== 'undefined' && ad && ad.descriptionFontWeight) ? ad.descriptionFontWeight : (oldInput.descriptionFontWeight || '400'); %>
                 <% const selectedDescriptionBgColor = (typeof ad !== 'undefined' && ad && ad.descriptionBgColor) ? ad.descriptionBgColor : (oldInput.descriptionBgColor || '#000000'); %>
                 <% const selectedImageFitMode = (typeof ad !== 'undefined' && ad.imageFitMode) ? ad.imageFitMode : (oldInput.fillFrameCrop === 'on' ? 'cover' : 'contain'); %>
-                <% const selectedImagePosition = (typeof ad !== 'undefined' && ad.imagePosition) ? ad.imagePosition : (oldInput.imagePosition || 'center'); %>
-                <% const initialImageObjectPosition =
-                  (typeof ad !== 'undefined' && typeof ad.imagePositionX === 'number' && typeof ad.imagePositionY === 'number')
-                    ? (ad.imagePositionX + '% ' + ad.imagePositionY + '%')
-                    : ((oldInput.imagePositionX && oldInput.imagePositionY)
-                      ? (oldInput.imagePositionX + '% ' + oldInput.imagePositionY + '%')
-                      : (
-                        selectedImagePosition === 'top' ? '50% 0%' :
-                        selectedImagePosition === 'bottom' ? '50% 100%' :
-                        selectedImagePosition === 'left' ? '0% 50%' :
-                        selectedImagePosition === 'right' ? '100% 50%' :
-                        selectedImagePosition === 'top-left' ? '0% 0%' :
-                        selectedImagePosition === 'top-right' ? '100% 0%' :
-                        selectedImagePosition === 'bottom-left' ? '0% 100%' :
-                        selectedImagePosition === 'bottom-right' ? '100% 100%' :
-                        '50% 50%'
-                      ));
-                %>
-                <% const selectedCaptionPosition = (typeof ad !== 'undefined' && ad.captionPosition) ? ad.captionPosition : (oldInput.captionPosition || 'top-left'); %>
-                <% const initialCaptionX =
-                  (typeof ad !== 'undefined' && typeof ad.captionPositionX === 'number')
-                    ? ad.captionPositionX
-                    : (oldInput.captionPositionX || (selectedCaptionPosition.includes('right') ? 62 : selectedCaptionPosition.includes('center') ? 30 : 5));
-                %>
-                <% const initialCaptionY =
-                  (typeof ad !== 'undefined' && typeof ad.captionPositionY === 'number')
-                    ? ad.captionPositionY
-                    : (oldInput.captionPositionY || (selectedCaptionPosition.includes('top') ? 5 : 68));
-                %>
+                <% const initialImageX = (typeof ad !== 'undefined' && typeof ad.imagePositionX === 'number') ? ad.imagePositionX : Number(oldInput.imagePositionX || 50); %>
+                <% const initialImageY = (typeof ad !== 'undefined' && typeof ad.imagePositionY === 'number') ? ad.imagePositionY : Number(oldInput.imagePositionY || 50); %>
+                <% const initialCaptionX = (typeof ad !== 'undefined' && typeof ad.captionPositionX === 'number') ? ad.captionPositionX : Number(oldInput.captionPositionX || 0); %>
+                <% const initialCaptionY = (typeof ad !== 'undefined' && typeof ad.captionPositionY === 'number') ? ad.captionPositionY : Number(oldInput.captionPositionY || 0); %>
+                <% const initialCaptionW = (typeof ad !== 'undefined' && typeof ad.captionWidthPct === 'number') ? ad.captionWidthPct : Number(oldInput.captionWidthPct || 30); %>
+                <% const initialCaptionH = (typeof ad !== 'undefined' && typeof ad.captionHeightPct === 'number') ? ad.captionHeightPct : Number(oldInput.captionHeightPct || 30); %>
                 <% const initialPicture2X =
                   (typeof ad !== 'undefined' && typeof ad.picture2PositionX === 'number')
                     ? ad.picture2PositionX
@@ -134,7 +117,7 @@
                   alt="Ad preview image"
                   class="preview-image"
                   id="previewImage"
-                  style="--preview-scale: <%= (selectedImageScale / 100).toFixed(2) %>; --preview-fit: <%= selectedImageFitMode %>; object-position: <%= initialImageObjectPosition %>;"
+                  style="--preview-scale: <%= (selectedImageScale / 100).toFixed(2) %>; --preview-fit: <%= selectedImageFitMode %>; --preview-x: <%= initialImageX %>%; --preview-y: <%= initialImageY %>%;"
                 />
                 <img
                   src="<%= (typeof ad !== 'undefined' && ad.picture2Path) ? ad.picture2Path : '' %>"
@@ -146,14 +129,16 @@
                 <div
                   class="preview-caption"
                   id="previewCaption"
-                  style="left: <%= initialCaptionX %>%; top: <%= initialCaptionY %>%;"
+                  style="left: <%= initialCaptionX %>%; top: <%= initialCaptionY %>%; width: <%= initialCaptionW %>%; height: <%= initialCaptionH %>%;"
                 >
-                  <strong id="previewCompany"><%= (typeof ad !== 'undefined' && ad.companyName) ? ad.companyName : (oldInput.companyName || 'Your Company Name') %></strong>
-                  <span id="previewPhone"><%= (typeof ad !== 'undefined' && ad.companyPhone) ? ad.companyPhone : (oldInput.companyPhone || 'Phone number') %></span>
-                  <span id="previewWebsite"><%= (typeof ad !== 'undefined' && ad.companyWebsite) ? ad.companyWebsite : (oldInput.companyWebsite || 'Website address') %></span>
+                  <strong id="previewCompany"><%= (typeof ad !== 'undefined' && ad.companyName) ? ad.companyName : (oldInput.companyName || customer?.companyName || 'Your Company Name') %></strong>
+                  <span id="previewPhone"><%= (typeof ad !== 'undefined' && ad.companyPhone) ? ad.companyPhone : (oldInput.companyPhone || customer?.phone || 'Phone number') %></span>
+                  <span id="previewWebsite"><%= (typeof ad !== 'undefined' && ad.companyWebsite) ? ad.companyWebsite : (oldInput.companyWebsite || customer?.companyWebsite || 'Website address') %></span>
                   <span id="previewLinkState" class="preview-link-state">
-                    <%= ((typeof ad !== 'undefined' && ad.linkUrl) || oldInput.linkUrl) ? 'Image click opens your URL' : 'No click-through URL set yet' %>
+                    <%= ((typeof ad !== 'undefined' && ad.linkUrl) || oldInput.linkUrl || customer?.companyWebsite) ? 'Image click opens your URL' : 'No click-through URL set yet' %>
                   </span>
+                  <span class="caption-resize-handle" id="captionResizeHandle" title="Drag to resize"></span>
+                  <span class="caption-resize-handle-y" id="captionResizeHandleY" title="Drag to resize height"></span>
                 </div>
                 <div
                   class="preview-description-box"
@@ -174,7 +159,7 @@
                   <label for="picture">
                     <% if (editMode) { %>Upload New Picture <small>(leave blank to keep existing)</small><% } else { %>Upload Picture<% } %>
                   </label>
-                  <input type="file" id="picture" name="picture" accept=".jpg,.jpeg,.png,.gif" />
+                  <input type="file" id="picture" name="picture" accept=".jpg,.jpeg,.png,.gif" <%= !editMode ? 'required' : '' %> />
                   <% if (editMode && ad && ad.picturePath) { %>
                     <div class="current-image">
                       <img src="<%= ad.picturePath %>" alt="Current ad image" />
@@ -267,7 +252,7 @@
                     value="<%= (typeof ad !== 'undefined' && ad && ad.captionFontColor) ? ad.captionFontColor : (oldInput.captionFontColor || '#ffffff') %>" />
                 </div>
                 <div class="form-group">
-                  <label for="slideBgColor">Slide Background Color</label>
+                  <label for="slideBgColor">Carousel Background Color</label>
                   <input type="color" id="slideBgColor" name="slideBgColor"
                     value="<%= (typeof ad !== 'undefined' && ad && ad.slideBgColor) ? ad.slideBgColor : (oldInput.slideBgColor || '#000000') %>" />
                 </div>
@@ -321,40 +306,14 @@
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="captionPosition">Move Company Info To</label>
-              <select id="captionPosition" name="captionPosition">
-                <option value="top-left" <%= selectedCaptionPosition === 'top-left' ? 'selected' : '' %>>Top Left</option>
-                <option value="top-center" <%= selectedCaptionPosition === 'top-center' ? 'selected' : '' %>>Top Center</option>
-                <option value="top-right" <%= selectedCaptionPosition === 'top-right' ? 'selected' : '' %>>Top Right</option>
-                <option value="bottom-left" <%= selectedCaptionPosition === 'bottom-left' ? 'selected' : '' %>>Bottom Left</option>
-                <option value="bottom-center" <%= selectedCaptionPosition === 'bottom-center' ? 'selected' : '' %>>Bottom Center</option>
-                <option value="bottom-right" <%= selectedCaptionPosition === 'bottom-right' ? 'selected' : '' %>>Bottom Right</option>
-              </select>
-              <input type="hidden" id="captionPositionX" name="captionPositionX" value="<%= initialCaptionX %>" />
-              <input type="hidden" id="captionPositionY" name="captionPositionY" value="<%= initialCaptionY %>" />
-              <input type="hidden" id="descriptionPositionX" name="descriptionPositionX" value="<%= initialDescriptionX %>" />
-              <input type="hidden" id="descriptionPositionY" name="descriptionPositionY" value="<%= initialDescriptionY %>" />
-            </div>
-
-            <div class="form-group">
-              <label for="imagePosition">Move Picture Focus To</label>
-              <select id="imagePosition" name="imagePosition">
-                <option value="center" <%= selectedImagePosition === 'center' ? 'selected' : '' %>>Center</option>
-                <option value="top" <%= selectedImagePosition === 'top' ? 'selected' : '' %>>Top</option>
-                <option value="bottom" <%= selectedImagePosition === 'bottom' ? 'selected' : '' %>>Bottom</option>
-                <option value="left" <%= selectedImagePosition === 'left' ? 'selected' : '' %>>Left</option>
-                <option value="right" <%= selectedImagePosition === 'right' ? 'selected' : '' %>>Right</option>
-                <option value="top-left" <%= selectedImagePosition === 'top-left' ? 'selected' : '' %>>Top Left</option>
-                <option value="top-right" <%= selectedImagePosition === 'top-right' ? 'selected' : '' %>>Top Right</option>
-                <option value="bottom-left" <%= selectedImagePosition === 'bottom-left' ? 'selected' : '' %>>Bottom Left</option>
-                <option value="bottom-right" <%= selectedImagePosition === 'bottom-right' ? 'selected' : '' %>>Bottom Right</option>
-              </select>
-              <input type="hidden" id="imagePositionX" name="imagePositionX" value="<%= (typeof ad !== 'undefined' && typeof ad.imagePositionX === 'number') ? ad.imagePositionX : (oldInput.imagePositionX || '') %>" />
-              <input type="hidden" id="imagePositionY" name="imagePositionY" value="<%= (typeof ad !== 'undefined' && typeof ad.imagePositionY === 'number') ? ad.imagePositionY : (oldInput.imagePositionY || '') %>" />
-            </div>
-          </div>
+          <input type="hidden" id="captionPositionX" name="captionPositionX" value="<%= initialCaptionX %>" />
+          <input type="hidden" id="captionPositionY" name="captionPositionY" value="<%= initialCaptionY %>" />
+          <input type="hidden" id="captionWidthPct" name="captionWidthPct" value="<%= initialCaptionW %>" />
+          <input type="hidden" id="captionHeightPct" name="captionHeightPct" value="<%= initialCaptionH %>" />
+          <input type="hidden" id="descriptionPositionX" name="descriptionPositionX" value="<%= initialDescriptionX %>" />
+          <input type="hidden" id="descriptionPositionY" name="descriptionPositionY" value="<%= initialDescriptionY %>" />
+          <input type="hidden" id="imagePositionX" name="imagePositionX" value="<%= initialImageX %>" />
+          <input type="hidden" id="imagePositionY" name="imagePositionY" value="<%= initialImageY %>" />
 
           <div class="form-group form-check">
             <input

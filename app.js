@@ -7,6 +7,7 @@ import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import cors from 'cors';
 import path from 'path';
+import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
 
 import indexRouter from './routes/index.js';
@@ -15,6 +16,7 @@ import advertiseRouter from './routes/advertise.js';
 import paymentRouter from './routes/payment.js';
 import dashboardRouter from './routes/dashboard.js';
 import adminRouter from './routes/admin.js';
+import { renderServerError } from './utils/renderServerError.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -27,16 +29,35 @@ export function createApp() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", 'https://js.stripe.com'],
+          scriptSrc: [
+            "'self'",
+            'https://js.stripe.com',
+            'https://www.google.com/recaptcha/',
+            'https://www.gstatic.com/recaptcha/',
+          ],
           styleSrc: [
             "'self'",
             "'unsafe-inline'",
             'https://fonts.googleapis.com',
           ],
           fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-          imgSrc: ["'self'", 'data:', 'blob:', 'https://*.stripe.com'],
-          frameSrc: ["'self'", 'https://js.stripe.com'],
-          connectSrc: ["'self'", 'https://api.stripe.com'],
+          imgSrc: [
+            "'self'",
+            'data:',
+            'blob:',
+            'https://*.stripe.com',
+            'https://www.gstatic.com/recaptcha/',
+          ],
+          frameSrc: [
+            "'self'",
+            'https://js.stripe.com',
+            'https://www.google.com/recaptcha/',
+          ],
+          connectSrc: [
+            "'self'",
+            'https://api.stripe.com',
+            'https://www.google.com/recaptcha/',
+          ],
         },
       },
     }),
@@ -73,6 +94,12 @@ export function createApp() {
   );
   app.use(express.json({ limit: '50kb' }));
   app.use(express.urlencoded({ extended: true, limit: '50kb' }));
+
+  /* ── Request context ──────────────────────────────────────────────────────── */
+  app.use((req, _res, next) => {
+    req.requestId = randomUUID().replace(/-/g, '').slice(0, 12);
+    next();
+  });
 
   /* ── Session ───────────────────────────────────────────────────────────────── */
   app.use(
@@ -118,6 +145,7 @@ export function createApp() {
     res.locals.oldInput = req.session.oldInput || {};
     res.locals.flashSuccess = req.session.flashSuccess || null;
     res.locals.flashError = req.session.flashError || null;
+    res.locals.requestId = req.requestId;
     delete req.session.validationErrors;
     delete req.session.oldInput;
     delete req.session.flashSuccess;
@@ -139,9 +167,9 @@ export function createApp() {
   );
 
   /* ── Global error handler ──────────────────────────────────────────────────── */
-  app.use((err, _req, res, _next) => {
+  app.use((err, req, res, _next) => {
     console.error(err);
-    res.status(500).render('500', { title: 'Server Error' });
+    renderServerError(req, res, err);
   });
 
   return app;

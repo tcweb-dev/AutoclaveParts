@@ -1834,66 +1834,6 @@ select.field-error:focus {
   text-decoration: none;
 }
 
-.admin-lightbox-open {
-  overflow: hidden;
-}
-
-.admin-lightbox {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  display: grid;
-  place-items: center;
-}
-
-.admin-lightbox[hidden] {
-  display: none;
-}
-
-.admin-lightbox-backdrop {
-  position: absolute;
-  inset: 0;
-  border: 0;
-  background: rgba(10, 14, 22, 0.78);
-  cursor: zoom-out;
-}
-
-.admin-lightbox-content {
-  position: relative;
-  margin: 0;
-  width: min(94vw, 1100px);
-  max-height: 90vh;
-  z-index: 1;
-  display: grid;
-  align-items: center;
-  justify-items: center;
-}
-
-.admin-lightbox-content img {
-  width: auto;
-  max-width: 100%;
-  max-height: 88vh;
-  border-radius: 10px;
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
-  background: #000;
-}
-
-.admin-lightbox-close {
-  position: absolute;
-  top: -0.75rem;
-  right: -0.75rem;
-  width: 2.4rem;
-  height: 2.4rem;
-  border-radius: 999px;
-  border: 0;
-  background: #fff;
-  color: #111827;
-  font-size: 1.7rem;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
-}
-
 .log-viewer {
   background: #1e1e2e;
   color: #cdd6f4;
